@@ -9,11 +9,11 @@ $(document).ready(function() {
     auth = $el.attr('class');
     switch (auth) {
       case 'google':
-        return ref.authWithOAuthRedirect('google', function(error, authData) {
+        return ref.authWithOAuthPopup('google', function(error, authData) {
           return sendResponse(authData);
         });
       case 'github':
-        return ref.authWithOAuthRedirect('github', function(error, authData) {
+        return ref.authWithOAuthPopup('github', function(error, authData) {
           return sendResponse(authData);
         });
     }

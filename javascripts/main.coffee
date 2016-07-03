@@ -7,9 +7,9 @@ $(document).ready ->
     switch auth
 
       when 'google'
-        ref.authWithOAuthRedirect 'google', (error, authData) ->
+        ref.authWithOAuthPopup 'google', (error, authData) ->
           sendResponse authData
 
       when 'github'
-        ref.authWithOAuthRedirect 'github', (error, authData) ->
+        ref.authWithOAuthPopup 'github', (error, authData) ->
           sendResponse authData
