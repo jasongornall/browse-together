@@ -2,6 +2,7 @@
 $(document).ready(function() {
   var ref, sendResponse;
   ref = new Firebase("https://browse-together.firebaseio.com");
+  ref.unauth();
   sendResponse = function(authData) {
     var editorExtensionId;
     editorExtensionId = "icannhlkkebffkcfgonfhengcgibfpbb";

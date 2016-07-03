@@ -1,0 +1,36 @@
+html body .header .image,
+html body .tab .image {
+  height: 30px;
+  width: 30px;
+  vertical-align: middle;
+  margin-right: 10px;
+}
+html body .header .logout,
+html body .tab .logout {
+  position: absolute;
+  right: 0;
+  padding: 7px 10px;
+}
+html body .users {
+  padding-top: 10px;
+}
+html body .users .tabs {
+  padding-left: 30px;
+}
+html body .users .tabs .tab .content {
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 9px;
+  color: #808080;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 300px;
+}
+html body .users .tabs .tab .image {
+  width: 16px;
+  height: 16px;
+}
+html body .users .tabs .tab[data-highlighted] .content {
+  color: #000;
+}

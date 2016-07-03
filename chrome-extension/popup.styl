@@ -1,0 +1,34 @@
+html
+  body
+    .header, .tab
+      .image
+        height 30px
+        width 30px
+        vertical-align middle
+        margin-right 10px
+      .logout
+        position: absolute;
+        right: 0;
+        padding: 7px 10px;
+    .users
+      padding-top 10px
+      .tabs
+        padding-left 30px
+        .tab
+          .content
+            display inline-block
+            vertical-align middle
+            font-size 9px
+            color gray
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            max-width: 300px;
+          .image
+            width 16px
+            height 16px
+        .tab[data-highlighted] .content
+          color black
+
+
+

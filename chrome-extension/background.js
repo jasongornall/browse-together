@@ -4,7 +4,9 @@ var ref;
 ref = new Firebase("https://browse-together.firebaseio.com");
 
 chrome.runtime.onMessageExternal.addListener(function(request, sender, sendResponse) {
+  ref = new Firebase("https://browse-together.firebaseio.com");
   return ref.authWithCustomToken(request.token, function(err, authData) {
+    debugger;
     var user_blob;
     user_blob = {};
     switch (request.provider) {
@@ -16,11 +18,25 @@ chrome.runtime.onMessageExternal.addListener(function(request, sender, sendRespo
         user_blob.name = request.github.displayName;
         user_blob.image = request.github.profileImageURL;
     }
-    debugger;
     ref.child("users/" + authData.uid + "/profile").set(user_blob);
-    return ref.child("users").on('value', function(doc) {
-      console.log('inside');
-      return chrome.runtime.sendMessage(doc.val());
+    ref.child("users/" + authData.uid).onDisconnect().remove();
+    return chrome.tabs.query({}, function(tabs) {
+      var new_tab_data, tab, _i, _len;
+      new_tab_data = {};
+      for (_i = 0, _len = tabs.length; _i < _len; _i++) {
+        tab = tabs[_i];
+        new_tab_data[tab.id] = {
+          highlighted: tab.highlighted || false,
+          icon: tab.favIconUrl || '',
+          title: tab.title || 'unkown',
+          url: tab.url
+        };
+      }
+      return ref.child("users/" + authData.uid + "/tabs").set(new_tab_data, function() {
+        return ref.child("users").on('value', function(doc) {
+          return chrome.runtime.sendMessage(doc.val() || {});
+        });
+      });
     });
   });
 });
@@ -38,7 +54,14 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       });
       break;
     case 'logout':
-      ref.unauth();
+      ref.onAuth(function(authData) {
+        if (!authData) {
+          return sendResponse(false);
+        }
+        ref.child("users/" + authData.uid).remove();
+        ref.child("users").off('value');
+        return ref.unauth();
+      });
       break;
     case 'messages':
       ref.onAuth(function(authData) {

@@ -1,7 +1,10 @@
 ref = new Firebase("https://browse-together.firebaseio.com");
 
 chrome.runtime.onMessageExternal.addListener (request, sender, sendResponse) ->
+  ref = new Firebase("https://browse-together.firebaseio.com");
+
   ref.authWithCustomToken request.token, (err, authData) ->
+    debugger;
     user_blob = {}
     switch request.provider
 
@@ -13,12 +16,20 @@ chrome.runtime.onMessageExternal.addListener (request, sender, sendResponse) ->
         user_blob.name = request.github.displayName
         user_blob.image = request.github.profileImageURL
 
-    debugger;
     ref.child("users/#{authData.uid}/profile").set user_blob
-
-    ref.child("users").on 'value', (doc) ->
-      console.log 'inside'
-      chrome.runtime.sendMessage doc.val()
+    ref.child("users/#{authData.uid}").onDisconnect().remove()
+    chrome.tabs.query {}, (tabs) ->
+      new_tab_data = {}
+      for tab in tabs
+        new_tab_data[tab.id] = {
+          highlighted: tab.highlighted or false
+          icon: tab.favIconUrl or ''
+          title: tab.title or 'unkown'
+          url: tab.url
+        }
+      ref.child("users/#{authData.uid}/tabs").set new_tab_data, ->
+        ref.child("users").on 'value', (doc) ->
+          chrome.runtime.sendMessage doc.val() or {}
 
 chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
   switch request.type
@@ -30,14 +41,17 @@ chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
           sendResponse doc.val() or false
 
     when 'logout'
-      ref.unauth()
+      ref.onAuth (authData) ->
+        return sendResponse false unless authData
+        ref.child("users/#{authData.uid}").remove()
+        ref.child("users").off 'value'
+        ref.unauth()
 
     when 'messages'
       ref.onAuth (authData) ->
         return sendResponse false unless authData
         ref.child("users").once 'value', (doc) ->
           sendResponse doc.val() or {}
-
 
   return true
 

@@ -19,6 +19,7 @@ document.addEventListener 'DOMContentLoaded', ->
       $('body .header > .image').attr 'src', data.image
 
       $('.logout').on 'click', (e) ->
+        debugger;
         chrome.runtime.sendMessage {
           type: 'logout'
         }, (data) ->
@@ -28,9 +29,9 @@ document.addEventListener 'DOMContentLoaded', ->
         console.log users, '123'
         clearTimeout timeout
         timeout = setTimeout ( ->
-          for key, val of users
-            {profile, tabs } = val
-            $('.users').html  teacup.render ->
+          $('.users').html teacup.render ->
+            for key, val of users
+              {profile, tabs } = val
               div '.user', 'data-user': key, ->
                 div '.header', ->
                   img '.image', src: profile.image
@@ -38,9 +39,11 @@ document.addEventListener 'DOMContentLoaded', ->
                 div '.tabs', ->
                   for key_t, val_t of tabs
                     div '.tab', 'data-highlighted': val_t.highlighted, ->
+                      val_t.icon or= 'transparent.ico'
                       img '.image', src: val_t.icon
-                      div '.title', -> val_t.title
-                      div '.link', -> val_t.url
+                      span '.content', ->
+                        div '.title', -> val_t.title
+                        a '.link', href:val_t.url,  -> val_t.url
         ), 1000
 
 

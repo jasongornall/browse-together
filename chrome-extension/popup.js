@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
       $('body .header > .name').text(data.name);
       $('body .header > .image').attr('src', data.image);
       $('.logout').on('click', function(e) {
+        debugger;
         return chrome.runtime.sendMessage({
           type: 'logout'
         }, function(data) {
@@ -42,13 +43,13 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log(users, '123');
         clearTimeout(timeout);
         return timeout = setTimeout((function() {
-          var key, profile, tabs, val, _results;
-          _results = [];
-          for (key in users) {
-            val = users[key];
-            profile = val.profile, tabs = val.tabs;
-            _results.push($('.users').html(teacup.render(function() {
-              return div('.user', {
+          return $('.users').html(teacup.render(function() {
+            var key, profile, tabs, val, _results;
+            _results = [];
+            for (key in users) {
+              val = users[key];
+              profile = val.profile, tabs = val.tabs;
+              _results.push(div('.user', {
                 'data-user': key
               }, function() {
                 div('.header', function() {
@@ -67,23 +68,28 @@ document.addEventListener('DOMContentLoaded', function() {
                     _results1.push(div('.tab', {
                       'data-highlighted': val_t.highlighted
                     }, function() {
+                      val_t.icon || (val_t.icon = 'transparent.ico');
                       img('.image', {
                         src: val_t.icon
                       });
-                      div('.title', function() {
-                        return val_t.title;
-                      });
-                      return div('.link', function() {
-                        return val_t.url;
+                      return span('.content', function() {
+                        div('.title', function() {
+                          return val_t.title;
+                        });
+                        return a('.link', {
+                          href: val_t.url
+                        }, function() {
+                          return val_t.url;
+                        });
                       });
                     }));
                   }
                   return _results1;
                 });
-              });
-            })));
-          }
-          return _results;
+              }));
+            }
+            return _results;
+          }));
         }), 1000);
       };
       chrome.runtime.sendMessage({
