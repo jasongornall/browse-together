@@ -15,8 +15,10 @@ $(document).ready(function() {
     auth = $el.attr('class');
     switch (auth) {
       case 'google':
-        return ref.authWithOAuthPopup('google', function(error, authData) {
+        return ref.authWithOAuthPopup('google', (function(error, authData) {
           return sendResponse(authData);
+        }), {
+          scope: 'profile'
         });
       case 'github':
         return ref.authWithOAuthPopup('github', function(error, authData) {

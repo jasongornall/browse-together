@@ -12,8 +12,11 @@ $(document).ready ->
     switch auth
 
       when 'google'
-        ref.authWithOAuthPopup 'google', (error, authData) ->
+        ref.authWithOAuthPopup 'google', ((error, authData) ->
           sendResponse authData
+        ), {
+          scope: 'profile'
+        }
 
       when 'github'
         ref.authWithOAuthPopup 'github', (error, authData) ->

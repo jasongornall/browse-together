@@ -2,51 +2,38 @@
 ref = new Firebase("https://browse-together.firebaseio.com");
 
 chrome.runtime.onMessageExternal.addListener (request, sender, sendResponse) ->
-  console.log sendResponse, 'apple'
-
-chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
-  switch request.type
-
-    when 'auth-status'
-      ref.onAuth (authData) ->
-        main_auth_data = authData
-        sendResponse authData
-
-    when 'google-oauth'
-      ref.authWithOAuthRedirect 'google', (error, authData) ->
-        sendResponse authData
-
-    when 'github-oauth'
-      ref.authWithOAuthRedirect 'github', (error, authData) ->
-        sendResponse authData
+  ref.authWithCustomToken request.token
 
 chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
-  return
-  console.log tabId, changeInfo, tab
   return unless changeInfo.status is 'complete'
   ref.onAuth (authData) ->
     return unless authData
-    ref.child("users.#{authData.uid}.#{tabId}").set {
-      highlighted: tab.highlighted
-      icon: tab.favIconUrl
-      title: tab.title
+    ref.child("users/#{authData.uid}/#{tabId}").set {
+      highlighted: tab.highlighted or false
+      icon: tab.favIconUrl or ''
+      title: tab.title or 'unkown'
       url: tab.url
     }, (e) ->
       console.log e, '123'
 
 chrome.tabs.onRemoved.addListener (tabId, changeInfo, tab) ->
-  return
   ref.onAuth (authData) ->
     return unless authData
-    ref.child("users.#{authData.uid}.#{tabId}").remove()
+    ref.child("users/#{authData.uid}/#{tabId}").remove()
+
+chrome.tabs.onReplaced.addListener (new_tab_id, remove_tab_id) ->
+  ref.onAuth (authData) ->
+    ref.child("users/#{authData.uid}/#{remove_tab_id}").once 'value', (obj) ->
+      ref.child("users/#{authData.uid}/#{new_tab_id}").set obj.val()
+      ref.child("users/#{authData.uid}/#{remove_tab_id}").remove()
+
 
 chrome.tabs.onActivated.addListener ({tabId, windowId}) ->
-  return
   ref.onAuth (authData) ->
     return unless authData
     chrome.tabs.getAllInWindow windowId, (arr) ->
-      ref.onAuth (authData) ->
-        for tab in arr
-          h = tab.highlighted
-          ref.child("users.#{authData.uid}.#{tab.id}.highlighted").set h, (e) ->
-            console.log e, '123'
+      for tab in arr or []
+        do (tab) ->
+          ref.child("users/#{authData.uid}/#{tab.id}").once 'value', (obj) ->
+            return if not obj?.val()
+            ref.child("users/#{authData.uid}/#{tab.id}/highlighted").set tab.highlighted

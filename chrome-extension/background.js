@@ -4,31 +4,10 @@ var ref;
 ref = new Firebase("https://browse-together.firebaseio.com");
 
 chrome.runtime.onMessageExternal.addListener(function(request, sender, sendResponse) {
-  return console.log(sendResponse, 'apple');
-});
-
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-  switch (request.type) {
-    case 'auth-status':
-      return ref.onAuth(function(authData) {
-        var main_auth_data;
-        main_auth_data = authData;
-        return sendResponse(authData);
-      });
-    case 'google-oauth':
-      return ref.authWithOAuthRedirect('google', function(error, authData) {
-        return sendResponse(authData);
-      });
-    case 'github-oauth':
-      return ref.authWithOAuthRedirect('github', function(error, authData) {
-        return sendResponse(authData);
-      });
-  }
+  return ref.authWithCustomToken(request.token);
 });
 
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-  return;
-  console.log(tabId, changeInfo, tab);
   if (changeInfo.status !== 'complete') {
     return;
   }
@@ -36,10 +15,10 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
     if (!authData) {
       return;
     }
-    return ref.child("users." + authData.uid + "." + tabId).set({
-      highlighted: tab.highlighted,
-      icon: tab.favIconUrl,
-      title: tab.title,
+    return ref.child("users/" + authData.uid + "/" + tabId).set({
+      highlighted: tab.highlighted || false,
+      icon: tab.favIconUrl || '',
+      title: tab.title || 'unkown',
       url: tab.url
     }, function(e) {
       return console.log(e, '123');
@@ -48,36 +27,46 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 });
 
 chrome.tabs.onRemoved.addListener(function(tabId, changeInfo, tab) {
-  return;
   return ref.onAuth(function(authData) {
     if (!authData) {
       return;
     }
-    return ref.child("users." + authData.uid + "." + tabId).remove();
+    return ref.child("users/" + authData.uid + "/" + tabId).remove();
+  });
+});
+
+chrome.tabs.onReplaced.addListener(function(new_tab_id, remove_tab_id) {
+  return ref.onAuth(function(authData) {
+    return ref.child("users/" + authData.uid + "/" + remove_tab_id).once('value', function(obj) {
+      ref.child("users/" + authData.uid + "/" + new_tab_id).set(obj.val());
+      return ref.child("users/" + authData.uid + "/" + remove_tab_id).remove();
+    });
   });
 });
 
 chrome.tabs.onActivated.addListener(function(_arg) {
   var tabId, windowId;
   tabId = _arg.tabId, windowId = _arg.windowId;
-  return;
   return ref.onAuth(function(authData) {
     if (!authData) {
       return;
     }
     return chrome.tabs.getAllInWindow(windowId, function(arr) {
-      return ref.onAuth(function(authData) {
-        var h, tab, _i, _len, _results;
-        _results = [];
-        for (_i = 0, _len = arr.length; _i < _len; _i++) {
-          tab = arr[_i];
-          h = tab.highlighted;
-          _results.push(ref.child("users." + authData.uid + "." + tab.id + ".highlighted").set(h, function(e) {
-            return console.log(e, '123');
-          }));
-        }
-        return _results;
-      });
+      var tab, _i, _len, _ref, _results;
+      _ref = arr || [];
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        tab = _ref[_i];
+        _results.push((function(tab) {
+          return ref.child("users/" + authData.uid + "/" + tab.id).once('value', function(obj) {
+            if (!(obj != null ? obj.val() : void 0)) {
+              return;
+            }
+            return ref.child("users/" + authData.uid + "/" + tab.id + "/highlighted").set(tab.highlighted);
+          });
+        })(tab));
+      }
+      return _results;
     });
   });
 });
