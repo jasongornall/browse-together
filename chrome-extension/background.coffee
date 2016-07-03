@@ -1,5 +1,9 @@
 
 ref = new Firebase("https://browse-together.firebaseio.com");
+
+chrome.runtime.onMessageExternal.addListener (request, sender, sendResponse) ->
+  console.log sendResponse, 'apple'
+
 chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
   switch request.type
 
@@ -17,6 +21,7 @@ chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
         sendResponse authData
 
 chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
+  return
   console.log tabId, changeInfo, tab
   return unless changeInfo.status is 'complete'
   ref.onAuth (authData) ->
@@ -30,11 +35,13 @@ chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
       console.log e, '123'
 
 chrome.tabs.onRemoved.addListener (tabId, changeInfo, tab) ->
+  return
   ref.onAuth (authData) ->
     return unless authData
     ref.child("users.#{authData.uid}.#{tabId}").remove()
 
 chrome.tabs.onActivated.addListener ({tabId, windowId}) ->
+  return
   ref.onAuth (authData) ->
     return unless authData
     chrome.tabs.getAllInWindow windowId, (arr) ->

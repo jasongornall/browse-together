@@ -1,5 +1,9 @@
 $(document).ready ->
   ref = new Firebase("https://browse-together.firebaseio.com");
+  sendResponse = (authData)->
+    editorExtensionId = "abcdefghijklmnoabcdefhijklmnoabc";
+    chrome.runtime.sendMessage editorExtensionId, authData
+
   $('.login > div').on 'click', (e) ->
     console.log 'inside'
     $el = $ e.currentTarget

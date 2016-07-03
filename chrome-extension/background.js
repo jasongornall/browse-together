@@ -3,6 +3,10 @@ var ref;
 
 ref = new Firebase("https://browse-together.firebaseio.com");
 
+chrome.runtime.onMessageExternal.addListener(function(request, sender, sendResponse) {
+  return console.log(sendResponse, 'apple');
+});
+
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   switch (request.type) {
     case 'auth-status':
@@ -23,6 +27,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 });
 
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+  return;
   console.log(tabId, changeInfo, tab);
   if (changeInfo.status !== 'complete') {
     return;
@@ -43,6 +48,7 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 });
 
 chrome.tabs.onRemoved.addListener(function(tabId, changeInfo, tab) {
+  return;
   return ref.onAuth(function(authData) {
     if (!authData) {
       return;
@@ -54,6 +60,7 @@ chrome.tabs.onRemoved.addListener(function(tabId, changeInfo, tab) {
 chrome.tabs.onActivated.addListener(function(_arg) {
   var tabId, windowId;
   tabId = _arg.tabId, windowId = _arg.windowId;
+  return;
   return ref.onAuth(function(authData) {
     if (!authData) {
       return;
