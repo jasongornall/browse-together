@@ -10,7 +10,6 @@ $(document).ready(function() {
   };
   return $('.login > div').on('click', function(e) {
     var $el, auth;
-    console.log('inside');
     $el = $(e.currentTarget);
     auth = $el.attr('class');
     switch (auth) {

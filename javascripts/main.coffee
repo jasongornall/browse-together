@@ -6,7 +6,6 @@ $(document).ready ->
     window.close()
 
   $('.login > div').on 'click', (e) ->
-    console.log 'inside'
     $el = $ e.currentTarget
     auth = $el.attr('class')
     switch auth
