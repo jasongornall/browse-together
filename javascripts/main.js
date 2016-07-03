@@ -4,7 +4,7 @@ $(document).ready(function() {
   ref = new Firebase("https://browse-together.firebaseio.com");
   sendResponse = function(authData) {
     var editorExtensionId;
-    editorExtensionId = "abcdefghijklmnoabcdefhijklmnoabc";
+    editorExtensionId = "icannhlkkebffkcfgonfhengcgibfpbb";
     return chrome.runtime.sendMessage(editorExtensionId, authData);
   };
   return $('.login > div').on('click', function(e) {
