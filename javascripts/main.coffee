@@ -1,17 +1,14 @@
 $(document).ready ->
   ref = new Firebase("https://browse-together.firebaseio.com");
-  chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
+  $('.login > div').on 'click', (e) ->
+    console.log 'inside'
+    $el = $ e.currentTarget
     switch request.type
 
-      when 'auth-status'
-        ref.onAuth (authData) ->
-          main_auth_data = authData
-          sendResponse authData
-
-      when 'google-oauth'
+      when 'google'
         ref.authWithOAuthRedirect 'google', (error, authData) ->
           sendResponse authData
 
-      when 'github-oauth'
+      when 'github'
         ref.authWithOAuthRedirect 'github', (error, authData) ->
           sendResponse authData

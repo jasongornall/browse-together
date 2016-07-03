@@ -2,19 +2,16 @@
 $(document).ready(function() {
   var ref;
   ref = new Firebase("https://browse-together.firebaseio.com");
-  return chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+  return $('.login > div').on('click', function(e) {
+    var $el;
+    console.log('inside');
+    $el = $(e.currentTarget);
     switch (request.type) {
-      case 'auth-status':
-        return ref.onAuth(function(authData) {
-          var main_auth_data;
-          main_auth_data = authData;
-          return sendResponse(authData);
-        });
-      case 'google-oauth':
+      case 'google':
         return ref.authWithOAuthRedirect('google', function(error, authData) {
           return sendResponse(authData);
         });
-      case 'github-oauth':
+      case 'github':
         return ref.authWithOAuthRedirect('github', function(error, authData) {
           return sendResponse(authData);
         });
