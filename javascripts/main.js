@@ -3,10 +3,11 @@ $(document).ready(function() {
   var ref;
   ref = new Firebase("https://browse-together.firebaseio.com");
   return $('.login > div').on('click', function(e) {
-    var $el;
+    var $el, auth;
     console.log('inside');
     $el = $(e.currentTarget);
-    switch (request.type) {
+    auth = $el.attr('class');
+    switch (auth) {
       case 'google':
         return ref.authWithOAuthRedirect('google', function(error, authData) {
           return sendResponse(authData);

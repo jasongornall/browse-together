@@ -3,7 +3,8 @@ $(document).ready ->
   $('.login > div').on 'click', (e) ->
     console.log 'inside'
     $el = $ e.currentTarget
-    switch request.type
+    auth = $el.attr('class')
+    switch auth
 
       when 'google'
         ref.authWithOAuthRedirect 'google', (error, authData) ->
