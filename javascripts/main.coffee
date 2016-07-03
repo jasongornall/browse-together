@@ -3,6 +3,7 @@ $(document).ready ->
   sendResponse = (authData)->
     editorExtensionId = "icannhlkkebffkcfgonfhengcgibfpbb";
     chrome.runtime.sendMessage editorExtensionId, authData
+    window.close()
 
   $('.login > div').on 'click', (e) ->
     console.log 'inside'

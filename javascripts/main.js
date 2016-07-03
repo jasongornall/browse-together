@@ -5,7 +5,8 @@ $(document).ready(function() {
   sendResponse = function(authData) {
     var editorExtensionId;
     editorExtensionId = "icannhlkkebffkcfgonfhengcgibfpbb";
-    return chrome.runtime.sendMessage(editorExtensionId, authData);
+    chrome.runtime.sendMessage(editorExtensionId, authData);
+    return window.close();
   };
   return $('.login > div').on('click', function(e) {
     var $el, auth;
