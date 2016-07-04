@@ -29,7 +29,7 @@ document.addEventListener 'DOMContentLoaded', ->
         timeout = setTimeout ( ->
           $('.users').html teacup.render ->
             for key, val of users
-              {profile, tabs } = val
+              {profile, tabs} = val
               continue unless Object.keys(tabs or {}).length
               div '.user', 'data-user': key, ->
                 div '.header', ->
