@@ -39,7 +39,7 @@ document.addEventListener 'DOMContentLoaded', ->
                     b -> "#{friend} "
                     span '.remove', -> 'x'
                     if not is_mutual
-                      div -> "* they can see you but you can't see them.. ask them to friend ya!"
+                      span -> "* they can see you but you can't see them.. ask them t"
 
               div '.actions', ->
                 input '.friend', type: 'text'

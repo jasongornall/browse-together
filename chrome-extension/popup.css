@@ -110,7 +110,6 @@ html body > .users {
   padding-top: 10px;
 }
 html body > .users > .user > .header {
-  cursor: pointer;
   border-radius: 3px;
   border: 1px solid #bdd4f9;
   background-color: #e5efff;

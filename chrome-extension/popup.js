@@ -80,8 +80,8 @@ document.addEventListener('DOMContentLoaded', function() {
                       return 'x';
                     });
                     if (!is_mutual) {
-                      return div(function() {
-                        return "* they can see you but you can't see them.. ask them to friend ya!";
+                      return span(function() {
+                        return "* they can see you but you can't see them.. ask them t";
                       });
                     }
                   }));
