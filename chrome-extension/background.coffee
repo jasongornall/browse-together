@@ -44,27 +44,38 @@ if auth
       localStorage.removeItem 'auth'
     else
       tab_location = localStorage.getItem('tab_location') or 'users'
-      ref.child("#{tab_location}/#{authData.uid}/profile").once 'value', (doc) ->
-        setupTabs authData
+      ref.child("private_users/#{authData.uid}/profile").once 'value', (doc) ->
+        if doc.val()
+          tab_location = "private_users"
+          setupTabs authData
+        else
+          tab_location = "users"
+          ref.child("users/#{authData.uid}/profile").once 'value', (doc) ->
+            setupTabs authData
 
 chrome.runtime.onMessageExternal.addListener (request, sender, sendResponse) ->
   localStorage.setItem 'auth', request.token
   ref.authWithCustomToken request.token, (err, authData) ->
-    return unless authData
-    user_blob = {}
-    switch request.provider
+    ref.child("#{tab_location}/#{authData.uid}/profile").once 'value', (og_doc) ->
+      return unless authData
+      user_blob = {}
+      switch request.provider
 
-      when 'google'
-        user_blob.name = request.google.displayName
-        user_blob.image = request.google.profileImageURL
-        user_blob.last_modified = Date.now()
+        when 'google'
+          user_blob.name = request.google.displayName
+          user_blob.image = request.google.profileImageURL
+          user_blob.last_modified = Date.now()
+          user_blob.private = og_doc.child('private').val() or false
+          user_blob.friends = og_doc.child('friends').val() or {}
 
-      when 'github'
-        user_blob.name = request.github.displayName
-        user_blob.image = request.github.profileImageURL
-        user_blob.last_modified = Date.now()
-    ref.child("#{tab_location}/#{authData.uid}/profile").set user_blob, ->
-      setupTabs authData
+        when 'github'
+          user_blob.name = request.github.displayName
+          user_blob.image = request.github.profileImageURL
+          user_blob.last_modified = Date.now()
+          user_blob.private = og_doc.child('private').val() or false
+          user_blob.friends = og_doc.child('friends').val() or {}
+      ref.child("#{tab_location}/#{authData.uid}/profile").set user_blob, ->
+        setupTabs authData
 
 chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
   switch request.type
@@ -74,7 +85,6 @@ chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
       return sendResponse false unless authData
       ref.child("#{tab_location}/#{authData.uid}/profile").once 'value', (doc) ->
         friends = Object.keys doc.child('friends').val() or {}
-        console.log friends, 'zzz'
         return_friends = {}
         async.each friends, ((friend, next) ->
           ref.child("private_users/#{friend}").once 'value', ((doc) ->
@@ -128,11 +138,10 @@ chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
         ref.child("#{tab_original}/#{authData.uid}/profile").set current_doc, ->
           current_doc.uid = authData.uid
           return sendResponse current_doc if tab_original is tab_location
-          ref.child("#{tab_original}/#{authData.uid}").once 'value', (doc) ->
-            user = doc.val()
+          ref.child("#{tab_original}/#{authData.uid}").once 'value', (user_doc) ->
+            user = user_doc.val()
             ref.child("#{tab_original}/#{authData.uid}").remove ->
               ref.child("#{tab_location}/#{authData.uid}").set user, ->
-                localStorage.setItem('tab_location', tab_location)
                 sendResponse current_doc
 
     when 'messages'
@@ -177,8 +186,9 @@ chrome.tabs.onReplaced.addListener (new_tab_id, remove_tab_id) ->
   authData = ref.getAuth()
   return unless authData
   ref.child("#{tab_location}/#{authData.uid}/tabs/#{remove_tab_id}").once 'value', (obj) ->
-    ref.child("#{tab_location}/#{authData.uid}/tabs/#{new_tab_id}").set obj.val(), ->
-      ref.child("#{tab_location}/#{authData.uid}/tabs/#{remove_tab_id}").remove ->
+    tab_data = obj.val()
+    ref.child("#{tab_location}/#{authData.uid}/tabs/#{remove_tab_id}").remove ->
+      ref.child("#{tab_location}/#{authData.uid}/tabs/#{new_tab_id}").set tab_data, ->
         ref.child("#{tab_location}/#{authData.uid}/profile/last_modified").set Date.now()
 
 chrome.tabs.onActivated.addListener ({tabId, windowId}) ->

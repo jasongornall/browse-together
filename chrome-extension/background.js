@@ -73,8 +73,16 @@ if (auth) {
       return localStorage.removeItem('auth');
     } else {
       tab_location = localStorage.getItem('tab_location') || 'users';
-      return ref.child("" + tab_location + "/" + authData.uid + "/profile").once('value', function(doc) {
-        return setupTabs(authData);
+      return ref.child("private_users/" + authData.uid + "/profile").once('value', function(doc) {
+        if (doc.val()) {
+          tab_location = "private_users";
+          return setupTabs(authData);
+        } else {
+          tab_location = "users";
+          return ref.child("users/" + authData.uid + "/profile").once('value', function(doc) {
+            return setupTabs(authData);
+          });
+        }
       });
     }
   });
@@ -83,24 +91,30 @@ if (auth) {
 chrome.runtime.onMessageExternal.addListener(function(request, sender, sendResponse) {
   localStorage.setItem('auth', request.token);
   return ref.authWithCustomToken(request.token, function(err, authData) {
-    var user_blob;
-    if (!authData) {
-      return;
-    }
-    user_blob = {};
-    switch (request.provider) {
-      case 'google':
-        user_blob.name = request.google.displayName;
-        user_blob.image = request.google.profileImageURL;
-        user_blob.last_modified = Date.now();
-        break;
-      case 'github':
-        user_blob.name = request.github.displayName;
-        user_blob.image = request.github.profileImageURL;
-        user_blob.last_modified = Date.now();
-    }
-    return ref.child("" + tab_location + "/" + authData.uid + "/profile").set(user_blob, function() {
-      return setupTabs(authData);
+    return ref.child("" + tab_location + "/" + authData.uid + "/profile").once('value', function(og_doc) {
+      var user_blob;
+      if (!authData) {
+        return;
+      }
+      user_blob = {};
+      switch (request.provider) {
+        case 'google':
+          user_blob.name = request.google.displayName;
+          user_blob.image = request.google.profileImageURL;
+          user_blob.last_modified = Date.now();
+          user_blob["private"] = og_doc.child('private').val() || false;
+          user_blob.friends = og_doc.child('friends').val() || {};
+          break;
+        case 'github':
+          user_blob.name = request.github.displayName;
+          user_blob.image = request.github.profileImageURL;
+          user_blob.last_modified = Date.now();
+          user_blob["private"] = og_doc.child('private').val() || false;
+          user_blob.friends = og_doc.child('friends').val() || {};
+      }
+      return ref.child("" + tab_location + "/" + authData.uid + "/profile").set(user_blob, function() {
+        return setupTabs(authData);
+      });
     });
   });
 });
@@ -116,7 +130,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       ref.child("" + tab_location + "/" + authData.uid + "/profile").once('value', function(doc) {
         var friends, return_friends;
         friends = Object.keys(doc.child('friends').val() || {});
-        console.log(friends, 'zzz');
         return_friends = {};
         return async.each(friends, (function(friend, next) {
           return ref.child("private_users/" + friend).once('value', (function(doc) {
@@ -192,12 +205,11 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
           if (tab_original === tab_location) {
             return sendResponse(current_doc);
           }
-          return ref.child("" + tab_original + "/" + authData.uid).once('value', function(doc) {
+          return ref.child("" + tab_original + "/" + authData.uid).once('value', function(user_doc) {
             var user;
-            user = doc.val();
+            user = user_doc.val();
             return ref.child("" + tab_original + "/" + authData.uid).remove(function() {
               return ref.child("" + tab_location + "/" + authData.uid).set(user, function() {
-                localStorage.setItem('tab_location', tab_location);
                 return sendResponse(current_doc);
               });
             });
@@ -269,8 +281,10 @@ chrome.tabs.onReplaced.addListener(function(new_tab_id, remove_tab_id) {
     return;
   }
   return ref.child("" + tab_location + "/" + authData.uid + "/tabs/" + remove_tab_id).once('value', function(obj) {
-    return ref.child("" + tab_location + "/" + authData.uid + "/tabs/" + new_tab_id).set(obj.val(), function() {
-      return ref.child("" + tab_location + "/" + authData.uid + "/tabs/" + remove_tab_id).remove(function() {
+    var tab_data;
+    tab_data = obj.val();
+    return ref.child("" + tab_location + "/" + authData.uid + "/tabs/" + remove_tab_id).remove(function() {
+      return ref.child("" + tab_location + "/" + authData.uid + "/tabs/" + new_tab_id).set(tab_data, function() {
         return ref.child("" + tab_location + "/" + authData.uid + "/profile/last_modified").set(Date.now());
       });
     });
