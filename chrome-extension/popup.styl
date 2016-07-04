@@ -1,6 +1,29 @@
 html
   body
-    > .login, > .header .logout
+    > .users, > .profile, > .friends
+      display none
+      padding 5px 0
+    &[data-state="users"]
+      > .users
+        display block
+      > .nav .users
+        color blue
+    &[data-state="profile"]
+      > .profile
+        display block
+      > .nav .profile
+        color blue
+    &[data-state="friends"]
+      > .friends
+        display block
+      > .nav .friends
+        color blue
+
+    > .nav
+      display: flex;
+      justify-content: space-around;
+      padding: 10px;
+    .blue-button
       cursor: pointer;
       text-align: center;
       padding: 5px;
@@ -26,8 +49,41 @@ html
         position: absolute;
         right: 10px;
         padding: 7px 10px;
-
-    .users
+    > .friends
+      text-align center
+      .remove-friend
+        text-decoration: line-through;
+      .data
+        text-align left
+        display inline-block
+        > div
+          padding 5px 0
+        .remove
+          color red
+          cursor pointer
+      .actions
+        padding 10px
+        .add-friend
+          margin-left 10px
+        .submit
+          margin-top: 20px;
+          display: inline-block;
+    > .profile
+      text-align center
+      .bold
+        font-weight bold
+      input
+        min-width 250px
+      .data
+        text-align left
+        display inline-block
+        > div
+          padding 5px 0
+      .actions
+        display: flex;
+        justify-content: space-around;
+        padding: 10px;
+    > .users
       padding-top 10px
       > .user > .header
         cursor: pointer;
@@ -40,7 +96,7 @@ html
         position relative
         > .name
           vertical-align: middle;
-          max-width: 250px;
+          max-width: 220px
           overflow: hidden;
           display: inline-block;
           white-space: nowrap;

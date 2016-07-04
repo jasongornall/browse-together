@@ -1,5 +1,33 @@
-html body > .login,
-html body > .header .logout {
+html body > .users,
+html body > .profile,
+html body > .friends {
+  display: none;
+  padding: 5px 0;
+}
+html body[data-state="users"] > .users {
+  display: block;
+}
+html body[data-state="users"] > .nav .users {
+  color: #00f;
+}
+html body[data-state="profile"] > .profile {
+  display: block;
+}
+html body[data-state="profile"] > .nav .profile {
+  color: #00f;
+}
+html body[data-state="friends"] > .friends {
+  display: block;
+}
+html body[data-state="friends"] > .nav .friends {
+  color: #00f;
+}
+html body > .nav {
+  display: flex;
+  justify-content: space-around;
+  padding: 10px;
+}
+html body .blue-button {
   cursor: pointer;
   text-align: center;
   padding: 5px;
@@ -10,8 +38,7 @@ html body > .header .logout {
   border-radius: 3px;
   border: 1px solid #3079ed;
 }
-html body > .login:hover,
-html body > .header .logout:hover {
+html body .blue-button:hover {
   border: 1px solid #2f5bb7;
   color: #fff;
   text-shadow: 0 1px rgba(0,0,0,0.3);
@@ -31,10 +58,58 @@ html body .tab .logout {
   right: 10px;
   padding: 7px 10px;
 }
-html body .users {
+html body > .friends {
+  text-align: center;
+}
+html body > .friends .remove-friend {
+  text-decoration: line-through;
+}
+html body > .friends .data {
+  text-align: left;
+  display: inline-block;
+}
+html body > .friends .data > div {
+  padding: 5px 0;
+}
+html body > .friends .data .remove {
+  color: #f00;
+  cursor: pointer;
+}
+html body > .friends .actions {
+  padding: 10px;
+}
+html body > .friends .actions .add-friend {
+  margin-left: 10px;
+}
+html body > .friends .actions .submit {
+  margin-top: 20px;
+  display: inline-block;
+}
+html body > .profile {
+  text-align: center;
+}
+html body > .profile .bold {
+  font-weight: bold;
+}
+html body > .profile input {
+  min-width: 250px;
+}
+html body > .profile .data {
+  text-align: left;
+  display: inline-block;
+}
+html body > .profile .data > div {
+  padding: 5px 0;
+}
+html body > .profile .actions {
+  display: flex;
+  justify-content: space-around;
+  padding: 10px;
+}
+html body > .users {
   padding-top: 10px;
 }
-html body .users > .user > .header {
+html body > .users > .user > .header {
   cursor: pointer;
   border-radius: 3px;
   border: 1px solid #bdd4f9;
@@ -44,41 +119,41 @@ html body .users > .user > .header {
   font-size: 20px;
   position: relative;
 }
-html body .users > .user > .header > .name {
+html body > .users > .user > .header > .name {
   vertical-align: middle;
-  max-width: 250px;
+  max-width: 220px;
   overflow: hidden;
   display: inline-block;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-html body .users > .user > .header > .time {
+html body > .users > .user > .header > .time {
   position: absolute;
   right: 0;
   font-size: 10px;
   top: 7px;
   right: 10px;
 }
-html body .users > .user > .header > .time:before {
+html body > .users > .user > .header > .time:before {
   content: 'Active ';
 }
-html body .users > .user > .header:hover {
+html body > .users > .user > .header:hover {
   background-color: ligthen(#357ae8, 30);
   background-image: -webkit-linear-gradient(top, #e5efff, #bed4f8);
 }
-html body .users .tabs {
+html body > .users .tabs {
   padding-left: 30px;
 }
-html body .users .tabs .tab {
+html body > .users .tabs .tab {
   padding: 5px;
 }
-html body .users .tabs .tab:nth-child(even) {
+html body > .users .tabs .tab:nth-child(even) {
   background: #f1f1f1;
 }
-html body .users .tabs .tab:nth-child(odd) {
+html body > .users .tabs .tab:nth-child(odd) {
   background: #fefefe;
 }
-html body .users .tabs .tab .content {
+html body > .users .tabs .tab .content {
   display: inline-block;
   vertical-align: middle;
   font-size: 9px;
@@ -88,11 +163,11 @@ html body .users .tabs .tab .content {
   white-space: nowrap;
   max-width: 300px;
 }
-html body .users .tabs .tab .image {
+html body > .users .tabs .tab .image {
   width: 16px;
   height: 16px;
 }
-html body .users .tabs .tab[data-highlighted] .content {
+html body > .users .tabs .tab[data-highlighted] .content {
   font-weight: bold;
   color: #000;
 }
