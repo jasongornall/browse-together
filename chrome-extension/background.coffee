@@ -1,6 +1,32 @@
 ref = new Firebase("https://browse-together.firebaseio.com");
 
+setupTabs = (authData) ->
+  ref.child("users/#{authData.uid}/profile").set user_blob
+  ref.child("users/#{authData.uid}").onDisconnect().remove()
+  chrome.tabs.query {}, (tabs) ->
+    new_tab_data = {}
+    for tab in tabs
+      new_tab_data[tab.id] = {
+        highlighted: tab.highlighted or false
+        icon: tab.favIconUrl or ''
+        title: tab.title or 'unkown'
+        url: tab.url
+      }
+    ref.child("users/#{authData.uid}/tabs").set new_tab_data, ->
+      ref.child("users").on 'value', (doc) ->
+        chrome.runtime.sendMessage doc.val() or {}
+
+# attempt oauth
+auth = localStorage.getItem 'auth'
+if auth
+  ref.authWithCustomToken request.token, (err, authData) ->
+    if err
+      localStorage.removeItem 'auth'
+    else
+      setupTabs authData
+
 chrome.runtime.onMessageExternal.addListener (request, sender, sendResponse) ->
+  localStorage.setItem 'auth', request.token
   ref.authWithCustomToken request.token, (err, authData) ->
     debugger;
     user_blob = {}
@@ -14,20 +40,7 @@ chrome.runtime.onMessageExternal.addListener (request, sender, sendResponse) ->
         user_blob.name = request.github.displayName
         user_blob.image = request.github.profileImageURL
 
-    ref.child("users/#{authData.uid}/profile").set user_blob
-    ref.child("users/#{authData.uid}").onDisconnect().remove()
-    chrome.tabs.query {}, (tabs) ->
-      new_tab_data = {}
-      for tab in tabs
-        new_tab_data[tab.id] = {
-          highlighted: tab.highlighted or false
-          icon: tab.favIconUrl or ''
-          title: tab.title or 'unkown'
-          url: tab.url
-        }
-      ref.child("users/#{authData.uid}/tabs").set new_tab_data, ->
-        ref.child("users").on 'value', (doc) ->
-          chrome.runtime.sendMessage doc.val() or {}
+    setupTabs authData
 
 chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
   switch request.type

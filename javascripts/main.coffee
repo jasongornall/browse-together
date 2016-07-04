@@ -2,7 +2,7 @@ $(document).ready ->
   ref = new Firebase("https://browse-together.firebaseio.com");
   ref.unauth()
   sendResponse = (authData)->
-    editorExtensionId = "aojjpgcfbifipkmelibaclhgggacpcim";
+    editorExtensionId = "ekdkmnehdcckjfpbjhfpaihflhggjjgo";
     chrome.runtime.sendMessage editorExtensionId, authData
     window.close()
 
