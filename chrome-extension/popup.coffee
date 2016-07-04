@@ -30,6 +30,7 @@ document.addEventListener 'DOMContentLoaded', ->
           $('.users').html teacup.render ->
             for key, val of users
               {profile, tabs } = val
+              continue unless Object.keys(tabs or {}).length
               div '.user', 'data-user': key, ->
                 div '.header', ->
                   img '.image', src: profile.image

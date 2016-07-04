@@ -47,6 +47,9 @@ document.addEventListener('DOMContentLoaded', function() {
             for (key in users) {
               val = users[key];
               profile = val.profile, tabs = val.tabs;
+              if (!Object.keys(tabs || {}).length) {
+                continue;
+              }
               _results.push(div('.user', {
                 'data-user': key
               }, function() {
