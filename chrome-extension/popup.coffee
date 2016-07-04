@@ -43,7 +43,7 @@ document.addEventListener 'DOMContentLoaded', ->
                       img '.image', src: val_t.icon
                       span '.content', ->
                         div '.title', -> val_t.title
-                        a '.link', href:val_t.url,  -> val_t.url
+                        a '.link', target:'_blank', href:val_t.url, -> val_t.url
         ), 1000
 
 

@@ -1,3 +1,21 @@
+html body > .login {
+  cursor: pointer;
+  text-align: center;
+  padding: 5px;
+  text-shadow: 0 1px rgba(0,0,0,0.1);
+  background-color: #4d90fe;
+  background-image: -webkit-linear-gradient(top, #4d90fe, #4787ed);
+  color: #fff;
+  border-radius: 3px;
+  border: 1px solid #3079ed;
+}
+html body > .login:hover {
+  border: 1px solid #2f5bb7;
+  color: #fff;
+  text-shadow: 0 1px rgba(0,0,0,0.3);
+  background-color: #357ae8;
+  background-image: -webkit-linear-gradient(top, #4d90fe, #357ae8);
+}
 html body .header .image,
 html body .tab .image {
   height: 30px;
@@ -32,5 +50,6 @@ html body .users .tabs .tab .image {
   height: 16px;
 }
 html body .users .tabs .tab[data-highlighted] .content {
+  font-weight: bold;
   color: #000;
 }

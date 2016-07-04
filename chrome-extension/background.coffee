@@ -1,8 +1,7 @@
 ref = new Firebase("https://browse-together.firebaseio.com");
 
 setupTabs = (authData) ->
-  ref.child("users/#{authData.uid}/profile").set user_blob
-  ref.child("users/#{authData.uid}").onDisconnect().remove()
+  ref.child("users/#{authData.uid}/tabs").onDisconnect().remove()
   chrome.tabs.query {}, (tabs) ->
     new_tab_data = {}
     for tab in tabs
@@ -19,7 +18,7 @@ setupTabs = (authData) ->
 # attempt oauth
 auth = localStorage.getItem 'auth'
 if auth
-  ref.authWithCustomToken request.token, (err, authData) ->
+  ref.authWithCustomToken auth, (err, authData) ->
     if err
       localStorage.removeItem 'auth'
     else
@@ -28,7 +27,7 @@ if auth
 chrome.runtime.onMessageExternal.addListener (request, sender, sendResponse) ->
   localStorage.setItem 'auth', request.token
   ref.authWithCustomToken request.token, (err, authData) ->
-    debugger;
+    return unless authData
     user_blob = {}
     switch request.provider
 
@@ -39,7 +38,7 @@ chrome.runtime.onMessageExternal.addListener (request, sender, sendResponse) ->
       when 'github'
         user_blob.name = request.github.displayName
         user_blob.image = request.github.profileImageURL
-
+    ref.child("users/#{authData.uid}/profile").set user_blob
     setupTabs authData
 
 chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
@@ -47,8 +46,11 @@ chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
 
     when 'get-local-user'
       authData = ref.getAuth()
+      console.log ref, authData, 'zzz'
       return sendResponse false unless authData
+      console.log 'wwww'
       ref.child("users/#{authData.uid}/profile").once 'value', (doc) ->
+        console.log doc.val() or false, 'ewqeeqwew'
         sendResponse doc.val() or false
 
     when 'logout'

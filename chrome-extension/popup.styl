@@ -1,5 +1,21 @@
 html
   body
+    > .login
+      cursor: pointer;
+      text-align: center;
+      padding: 5px;
+      text-shadow: 0 1px rgba(0,0,0,0.1);
+      background-color: #4d90fe;
+      background-image: -webkit-linear-gradient(top,#4d90fe,#4787ed);
+      color: white;
+      border-radius: 3px;
+      border: 1px solid #3079ed;
+      &:hover
+        border: 1px solid #2f5bb7;
+        color: #fff;
+        text-shadow: 0 1px rgba(0,0,0,0.3);
+        background-color: #357ae8;
+        background-image: -webkit-linear-gradient(top,#4d90fe,#357ae8);
     .header, .tab
       .image
         height 30px
@@ -10,6 +26,7 @@ html
         position: absolute;
         right: 0;
         padding: 7px 10px;
+
     .users
       padding-top 10px
       .tabs
@@ -28,6 +45,7 @@ html
             width 16px
             height 16px
         .tab[data-highlighted] .content
+          font-weight bold
           color black
 
 

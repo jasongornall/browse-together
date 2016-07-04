@@ -2,17 +2,41 @@
 <html>
 
 <head>
-    <meta charset='utf-8'>
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="description" content="Browse-together : ">
-    <script src="https://cdn.firebase.com/js/client/2.4.2/firebase.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script src="javascripts/main.js"></script>
-    <title>Browse-together</title>
+  <style type="text/css">
+    body {
+      text-align: center;
+    }
+    .login > div {
+      cursor: pointer;
+      padding: 5px;
+      display: inline-block;
+      text-shadow: 0 1px rgba(0,0,0,0.1);
+      background-color: #4d90fe;
+      background-image: -webkit-linear-gradient(top,#4d90fe,#4787ed);
+      color: white;
+      border-radius: 3px;
+      border: 1px solid #3079ed;
+    }
+    .login > div:hover {
+      border: 1px solid #2f5bb7;
+      color: #fff;
+      text-shadow: 0 1px rgba(0,0,0,0.3);
+      background-color: #357ae8;
+      background-image: -webkit-linear-gradient(top,#4d90fe,#357ae8);
+    }
+  </style>
+  <meta charset='utf-8'>
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="description" content="Browse-together : ">
+  <script src="https://cdn.firebase.com/js/client/2.4.2/firebase.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="javascripts/main.js"></script>
+  <title>Browse-together</title>
 </head>
 
 <body>
   <div class="login">
+    <h3>Browse Together Login</h3>
     <div class= "google">
       <span>Login with Google</span>
     </div>

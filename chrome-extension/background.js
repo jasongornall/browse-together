@@ -4,8 +4,7 @@ var auth, ref, setupTabs;
 ref = new Firebase("https://browse-together.firebaseio.com");
 
 setupTabs = function(authData) {
-  ref.child("users/" + authData.uid + "/profile").set(user_blob);
-  ref.child("users/" + authData.uid).onDisconnect().remove();
+  ref.child("users/" + authData.uid + "/tabs").onDisconnect().remove();
   return chrome.tabs.query({}, function(tabs) {
     var new_tab_data, tab, _i, _len;
     new_tab_data = {};
@@ -29,7 +28,7 @@ setupTabs = function(authData) {
 auth = localStorage.getItem('auth');
 
 if (auth) {
-  ref.authWithCustomToken(request.token, function(err, authData) {
+  ref.authWithCustomToken(auth, function(err, authData) {
     if (err) {
       return localStorage.removeItem('auth');
     } else {
@@ -41,8 +40,10 @@ if (auth) {
 chrome.runtime.onMessageExternal.addListener(function(request, sender, sendResponse) {
   localStorage.setItem('auth', request.token);
   return ref.authWithCustomToken(request.token, function(err, authData) {
-    debugger;
     var user_blob;
+    if (!authData) {
+      return;
+    }
     user_blob = {};
     switch (request.provider) {
       case 'google':
@@ -53,6 +54,7 @@ chrome.runtime.onMessageExternal.addListener(function(request, sender, sendRespo
         user_blob.name = request.github.displayName;
         user_blob.image = request.github.profileImageURL;
     }
+    ref.child("users/" + authData.uid + "/profile").set(user_blob);
     return setupTabs(authData);
   });
 });
@@ -62,10 +64,13 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   switch (request.type) {
     case 'get-local-user':
       authData = ref.getAuth();
+      console.log(ref, authData, 'zzz');
       if (!authData) {
         return sendResponse(false);
       }
+      console.log('wwww');
       ref.child("users/" + authData.uid + "/profile").once('value', function(doc) {
+        console.log(doc.val() || false, 'ewqeeqwew');
         return sendResponse(doc.val() || false);
       });
       break;

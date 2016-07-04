@@ -77,6 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
                           return val_t.title;
                         });
                         return a('.link', {
+                          target: '_blank',
                           href: val_t.url
                         }, function() {
                           return val_t.url;
