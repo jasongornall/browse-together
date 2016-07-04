@@ -1,7 +1,6 @@
 {
     "name": "Browse Together",
-    "version": "1.1",
-    "key": "abcdefghijklmnoabcdefhijklmnoabc",
+    "version": "1.0",
     "description": "A browser action with a popup dump of all bookmarks, including search, add, edit and delete.",
     "permissions": [
       "bookmarks",

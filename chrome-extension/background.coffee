@@ -1,8 +1,6 @@
 ref = new Firebase("https://browse-together.firebaseio.com");
 
 chrome.runtime.onMessageExternal.addListener (request, sender, sendResponse) ->
-  ref = new Firebase("https://browse-together.firebaseio.com");
-
   ref.authWithCustomToken request.token, (err, authData) ->
     debugger;
     user_blob = {}
@@ -35,56 +33,56 @@ chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
   switch request.type
 
     when 'get-local-user'
-      ref.onAuth (authData) ->
-        return sendResponse false unless authData
-        ref.child("users/#{authData.uid}/profile").once 'value', (doc) ->
-          sendResponse doc.val() or false
+      authData = ref.getAuth()
+      return sendResponse false unless authData
+      ref.child("users/#{authData.uid}/profile").once 'value', (doc) ->
+        sendResponse doc.val() or false
 
     when 'logout'
-      ref.onAuth (authData) ->
-        return sendResponse false unless authData
-        ref.child("users/#{authData.uid}").remove()
-        ref.child("users").off 'value'
-        ref.unauth()
+      authData = ref.getAuth()
+      return sendResponse false unless authData
+      ref.child("users/#{authData.uid}").remove()
+      ref.child("users").off 'value'
+      ref.unauth()
 
     when 'messages'
-      ref.onAuth (authData) ->
-        return sendResponse false unless authData
-        ref.child("users").once 'value', (doc) ->
-          sendResponse doc.val() or {}
+      authData = ref.getAuth()
+      return sendResponse false unless authData
+      ref.child("users").once 'value', (doc) ->
+        sendResponse doc.val() or {}
 
   return true
 
 
 chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
   return unless changeInfo.status is 'complete'
-  ref.onAuth (authData) ->
-    return unless authData
-    ref.child("users/#{authData.uid}/tabs/#{tabId}").set {
-      highlighted: tab.highlighted or false
-      icon: tab.favIconUrl or ''
-      title: tab.title or 'unkown'
-      url: tab.url
-    }
+  authData = ref.getAuth()
+  return unless authData
+  ref.child("users/#{authData.uid}/tabs/#{tabId}").set {
+    highlighted: tab.highlighted or false
+    icon: tab.favIconUrl or ''
+    title: tab.title or 'unkown'
+    url: tab.url
+  }
 
 chrome.tabs.onRemoved.addListener (tabId, changeInfo, tab) ->
-  ref.onAuth (authData) ->
-    return unless authData
-    ref.child("users/#{authData.uid}/tabs/#{tabId}").remove()
+  authData = ref.getAuth()
+  return unless authData
+  ref.child("users/#{authData.uid}/tabs/#{tabId}").remove()
 
 chrome.tabs.onReplaced.addListener (new_tab_id, remove_tab_id) ->
-  ref.onAuth (authData) ->
-    return unless authData
-    ref.child("users/#{authData.uid}/tabs/#{remove_tab_id}").once 'value', (obj) ->
-      ref.child("users/#{authData.uid}/tabs/#{new_tab_id}").set obj.val()
-      ref.child("users/#{authData.uid}/tabs/#{remove_tab_id}").remove()
+  authData = ref.getAuth()
+  return unless authData
+  ref.child("users/#{authData.uid}/tabs/#{remove_tab_id}").once 'value', (obj) ->
+    ref.child("users/#{authData.uid}/tabs/#{new_tab_id}").set obj.val()
+    ref.child("users/#{authData.uid}/tabs/#{remove_tab_id}").remove()
 
 chrome.tabs.onActivated.addListener ({tabId, windowId}) ->
-  ref.onAuth (authData) ->
-    return unless authData
-    chrome.tabs.getAllInWindow windowId, (arr) ->
-      for tab in arr or []
-        do (tab) ->
-          ref.child("users/#{authData.uid}/tabs/#{tab.id}").once 'value', (obj) ->
-            return if not obj?.val()
-            ref.child("users/#{authData.uid}/tabs/#{tab.id}/highlighted").set tab.highlighted
+  authData = ref.getAuth()
+  return unless authData
+  chrome.tabs.getAllInWindow windowId, (arr) ->
+    for tab in arr or []
+      do (tab) ->
+        ref.child("users/#{authData.uid}/tabs/#{tab.id}").once 'value', (obj) ->
+          return if not obj?.val()
+          ref.child("users/#{authData.uid}/tabs/#{tab.id}/highlighted").set tab.highlighted
