@@ -127,22 +127,27 @@ chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     when 'update-settings'
       authData = ref.getAuth()
       return sendResponse false unless authData
-      ref.child("#{tab_location}/#{authData.uid}/profile").once 'value', (doc) ->
-        current_doc = doc.val()
+      ref.child("#{tab_location}/#{authData.uid}").once 'value', (doc) ->
+        user_val = doc.val() or {}
+
         {name, image, friends_only} = request.settings
-        current_doc.name = name
-        current_doc.image = image
-        current_doc.private = friends_only
+        user_val.profile ?= {}
+        user_val.profile.name = name
+        user_val.profile.image = image
+        user_val.profile.private = friends_only
         tab_location = if friends_only then "private_users" else 'users'
-        tab_original = if doc.child('private').val() then "private_users" else 'users'
-        ref.child("#{tab_original}/#{authData.uid}/profile").set current_doc, ->
-          current_doc.uid = authData.uid
-          return sendResponse current_doc if tab_original is tab_location
-          ref.child("#{tab_original}/#{authData.uid}").once 'value', (user_doc) ->
-            user = user_doc.val()
-            ref.child("#{tab_original}/#{authData.uid}").remove ->
-              ref.child("#{tab_location}/#{authData.uid}").set user, ->
-                sendResponse current_doc
+        tab_original = if doc.child('profile/private').val() then "private_users" else 'users'
+        ref.child("#{tab_original}/#{authData.uid}/profile").set user_val.profile, ->
+          user_val.profile.uid = authData.uid
+          if tab_original is tab_location
+            user_val.profile.uid = authData.uid
+            return sendResponse user_val.profile
+          console.log "#{tab_original}/#{authData.uid}", 'a'
+          ref.child("#{tab_original}/#{authData.uid}").remove ->
+            console.log "#{tab_location}/#{authData.uid}", 'b', user_val
+            ref.child("#{tab_location}/#{authData.uid}").set user_val, ->
+              user_val.profile.uid = authData.uid
+              sendResponse user_val.profile
 
     when 'messages'
       authData = ref.getAuth()

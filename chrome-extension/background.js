@@ -191,27 +191,30 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       if (!authData) {
         return sendResponse(false);
       }
-      ref.child("" + tab_location + "/" + authData.uid + "/profile").once('value', function(doc) {
-        var current_doc, friends_only, image, name, tab_original, _ref;
-        current_doc = doc.val();
+      ref.child("" + tab_location + "/" + authData.uid).once('value', function(doc) {
+        var friends_only, image, name, tab_original, user_val, _ref;
+        user_val = doc.val() || {};
         _ref = request.settings, name = _ref.name, image = _ref.image, friends_only = _ref.friends_only;
-        current_doc.name = name;
-        current_doc.image = image;
-        current_doc["private"] = friends_only;
+        if (user_val.profile == null) {
+          user_val.profile = {};
+        }
+        user_val.profile.name = name;
+        user_val.profile.image = image;
+        user_val.profile["private"] = friends_only;
         tab_location = friends_only ? "private_users" : 'users';
-        tab_original = doc.child('private').val() ? "private_users" : 'users';
-        return ref.child("" + tab_original + "/" + authData.uid + "/profile").set(current_doc, function() {
-          current_doc.uid = authData.uid;
+        tab_original = doc.child('profile/private').val() ? "private_users" : 'users';
+        return ref.child("" + tab_original + "/" + authData.uid + "/profile").set(user_val.profile, function() {
+          user_val.profile.uid = authData.uid;
           if (tab_original === tab_location) {
-            return sendResponse(current_doc);
+            user_val.profile.uid = authData.uid;
+            return sendResponse(user_val.profile);
           }
-          return ref.child("" + tab_original + "/" + authData.uid).once('value', function(user_doc) {
-            var user;
-            user = user_doc.val();
-            return ref.child("" + tab_original + "/" + authData.uid).remove(function() {
-              return ref.child("" + tab_location + "/" + authData.uid).set(user, function() {
-                return sendResponse(current_doc);
-              });
+          console.log("" + tab_original + "/" + authData.uid, 'a');
+          return ref.child("" + tab_original + "/" + authData.uid).remove(function() {
+            console.log("" + tab_location + "/" + authData.uid, 'b', user_val);
+            return ref.child("" + tab_location + "/" + authData.uid).set(user_val, function() {
+              user_val.profile.uid = authData.uid;
+              return sendResponse(user_val.profile);
             });
           });
         });
