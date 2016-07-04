@@ -13,10 +13,13 @@ setupTabs = (authData) ->
       }
     ref.child("users/#{authData.uid}/tabs").set new_tab_data, ->
       ref.child("users").on 'value', (doc) ->
+        chrome.browserAction.setIcon {path:"icon2.png"}
+        chrome.browserAction.setBadgeText {text: 'on'}
         chrome.runtime.sendMessage doc.val() or {}
 
 # attempt oauth
 auth = localStorage.getItem 'auth'
+chrome.browserAction.setBadgeText {text: 'off'}
 if auth
   ref.authWithCustomToken auth, (err, authData) ->
     if err
@@ -34,10 +37,12 @@ chrome.runtime.onMessageExternal.addListener (request, sender, sendResponse) ->
       when 'google'
         user_blob.name = request.google.displayName
         user_blob.image = request.google.profileImageURL
+        user_blob.last_modified = Date.now()
 
       when 'github'
         user_blob.name = request.github.displayName
         user_blob.image = request.github.profileImageURL
+        user_blob.last_modified = Date.now()
     ref.child("users/#{authData.uid}/profile").set user_blob
     setupTabs authData
 
@@ -46,11 +51,8 @@ chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
 
     when 'get-local-user'
       authData = ref.getAuth()
-      console.log ref, authData, 'zzz'
       return sendResponse false unless authData
-      console.log 'wwww'
       ref.child("users/#{authData.uid}/profile").once 'value', (doc) ->
-        console.log doc.val() or false, 'ewqeeqwew'
         sendResponse doc.val() or false
 
     when 'logout'
@@ -58,6 +60,9 @@ chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
       return sendResponse false unless authData
       ref.child("users/#{authData.uid}").remove()
       ref.child("users").off 'value'
+      chrome.browserAction.setIcon {path:"icon.png"}
+      chrome.browserAction.setBadgeText {text: 'off'}
+      localStorage.removeItem 'auth'
       ref.unauth()
 
     when 'messages'
@@ -79,11 +84,13 @@ chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
     title: tab.title or 'unkown'
     url: tab.url
   }
+  ref.child("users/#{authData.uid}/profile/last_modified").set Date.now()
 
 chrome.tabs.onRemoved.addListener (tabId, changeInfo, tab) ->
   authData = ref.getAuth()
   return unless authData
   ref.child("users/#{authData.uid}/tabs/#{tabId}").remove()
+  ref.child("users/#{authData.uid}/profile/last_modified").set Date.now()
 
 chrome.tabs.onReplaced.addListener (new_tab_id, remove_tab_id) ->
   authData = ref.getAuth()
@@ -91,6 +98,7 @@ chrome.tabs.onReplaced.addListener (new_tab_id, remove_tab_id) ->
   ref.child("users/#{authData.uid}/tabs/#{remove_tab_id}").once 'value', (obj) ->
     ref.child("users/#{authData.uid}/tabs/#{new_tab_id}").set obj.val()
     ref.child("users/#{authData.uid}/tabs/#{remove_tab_id}").remove()
+    ref.child("users/#{authData.uid}/profile/last_modified").set Date.now()
 
 chrome.tabs.onActivated.addListener ({tabId, windowId}) ->
   authData = ref.getAuth()
@@ -101,3 +109,4 @@ chrome.tabs.onActivated.addListener ({tabId, windowId}) ->
         ref.child("users/#{authData.uid}/tabs/#{tab.id}").once 'value', (obj) ->
           return if not obj?.val()
           ref.child("users/#{authData.uid}/tabs/#{tab.id}/highlighted").set tab.highlighted
+          ref.child("users/#{authData.uid}/profile/last_modified").set Date.now()

@@ -5,7 +5,7 @@ $(document).ready(function() {
   ref.unauth();
   sendResponse = function(authData) {
     var editorExtensionId;
-    editorExtensionId = "ekdkmnehdcckjfpbjhfpaihflhggjjgo";
+    editorExtensionId = "aojjpgcfbifipkmelibaclhgggacpcim";
     chrome.runtime.sendMessage(editorExtensionId, authData);
     return window.close();
   };

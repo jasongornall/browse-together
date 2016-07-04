@@ -19,14 +19,12 @@ document.addEventListener 'DOMContentLoaded', ->
       $('body .header > .image').attr 'src', data.image
 
       $('.logout').on 'click', (e) ->
-        debugger;
         chrome.runtime.sendMessage {
           type: 'logout'
         }, (data) ->
           location.reload()
 
       processMessages = (users) ->
-        console.log users, '123'
         clearTimeout timeout
         timeout = setTimeout ( ->
           $('.users').html teacup.render ->
@@ -36,16 +34,19 @@ document.addEventListener 'DOMContentLoaded', ->
                 div '.header', ->
                   img '.image', src: profile.image
                   span '.name', -> profile.name
+                  time '.time', 'datetime': new Date(profile.last_modified).toISOString(), -> ''
                 div '.tabs', ->
-                  for key_t, val_t of tabs
-                    div '.tab', 'data-highlighted': val_t.highlighted, ->
-                      val_t.icon or= 'transparent.ico'
-                      img '.image', src: val_t.icon
-                      span '.content', ->
-                        div '.title', -> val_t.title
-                        a '.link', target:'_blank', href:val_t.url, -> val_t.url
+                  for highlighted in [true, false]
+                    for key_t, val_t of tabs
+                      continue unless val_t.highlighted is highlighted
+                      div '.tab', 'data-highlighted': val_t.highlighted, ->
+                        val_t.icon or= 'transparent.ico'
+                        img '.image', src: val_t.icon
+                        span '.content', ->
+                          div '.title', -> val_t.title
+                          a '.link', target:'_blank', href:val_t.url, -> val_t.url
+          $('time.time').timeago()
         ), 1000
-
 
       chrome.runtime.sendMessage {type: 'messages'}, (messages) ->
         processMessages messages
@@ -59,6 +60,5 @@ document.addEventListener 'DOMContentLoaded', ->
 
       # handle login
       $('.login').on 'click', (e) ->
-        debugger;
         window.open 'https://jasongornall.github.io/browse-together/', '_blank'
 

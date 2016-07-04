@@ -19,6 +19,12 @@ setupTabs = function(authData) {
     }
     return ref.child("users/" + authData.uid + "/tabs").set(new_tab_data, function() {
       return ref.child("users").on('value', function(doc) {
+        chrome.browserAction.setIcon({
+          path: "icon2.png"
+        });
+        chrome.browserAction.setBadgeText({
+          text: 'on'
+        });
         return chrome.runtime.sendMessage(doc.val() || {});
       });
     });
@@ -26,6 +32,10 @@ setupTabs = function(authData) {
 };
 
 auth = localStorage.getItem('auth');
+
+chrome.browserAction.setBadgeText({
+  text: 'off'
+});
 
 if (auth) {
   ref.authWithCustomToken(auth, function(err, authData) {
@@ -49,10 +59,12 @@ chrome.runtime.onMessageExternal.addListener(function(request, sender, sendRespo
       case 'google':
         user_blob.name = request.google.displayName;
         user_blob.image = request.google.profileImageURL;
+        user_blob.last_modified = Date.now();
         break;
       case 'github':
         user_blob.name = request.github.displayName;
         user_blob.image = request.github.profileImageURL;
+        user_blob.last_modified = Date.now();
     }
     ref.child("users/" + authData.uid + "/profile").set(user_blob);
     return setupTabs(authData);
@@ -64,13 +76,10 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   switch (request.type) {
     case 'get-local-user':
       authData = ref.getAuth();
-      console.log(ref, authData, 'zzz');
       if (!authData) {
         return sendResponse(false);
       }
-      console.log('wwww');
       ref.child("users/" + authData.uid + "/profile").once('value', function(doc) {
-        console.log(doc.val() || false, 'ewqeeqwew');
         return sendResponse(doc.val() || false);
       });
       break;
@@ -81,6 +90,13 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       }
       ref.child("users/" + authData.uid).remove();
       ref.child("users").off('value');
+      chrome.browserAction.setIcon({
+        path: "icon.png"
+      });
+      chrome.browserAction.setBadgeText({
+        text: 'off'
+      });
+      localStorage.removeItem('auth');
       ref.unauth();
       break;
     case 'messages':
@@ -104,12 +120,13 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
   if (!authData) {
     return;
   }
-  return ref.child("users/" + authData.uid + "/tabs/" + tabId).set({
+  ref.child("users/" + authData.uid + "/tabs/" + tabId).set({
     highlighted: tab.highlighted || false,
     icon: tab.favIconUrl || '',
     title: tab.title || 'unkown',
     url: tab.url
   });
+  return ref.child("users/" + authData.uid + "/profile/last_modified").set(Date.now());
 });
 
 chrome.tabs.onRemoved.addListener(function(tabId, changeInfo, tab) {
@@ -118,7 +135,8 @@ chrome.tabs.onRemoved.addListener(function(tabId, changeInfo, tab) {
   if (!authData) {
     return;
   }
-  return ref.child("users/" + authData.uid + "/tabs/" + tabId).remove();
+  ref.child("users/" + authData.uid + "/tabs/" + tabId).remove();
+  return ref.child("users/" + authData.uid + "/profile/last_modified").set(Date.now());
 });
 
 chrome.tabs.onReplaced.addListener(function(new_tab_id, remove_tab_id) {
@@ -129,7 +147,8 @@ chrome.tabs.onReplaced.addListener(function(new_tab_id, remove_tab_id) {
   }
   return ref.child("users/" + authData.uid + "/tabs/" + remove_tab_id).once('value', function(obj) {
     ref.child("users/" + authData.uid + "/tabs/" + new_tab_id).set(obj.val());
-    return ref.child("users/" + authData.uid + "/tabs/" + remove_tab_id).remove();
+    ref.child("users/" + authData.uid + "/tabs/" + remove_tab_id).remove();
+    return ref.child("users/" + authData.uid + "/profile/last_modified").set(Date.now());
   });
 });
 
@@ -151,7 +170,8 @@ chrome.tabs.onActivated.addListener(function(_arg) {
           if (!(obj != null ? obj.val() : void 0)) {
             return;
           }
-          return ref.child("users/" + authData.uid + "/tabs/" + tab.id + "/highlighted").set(tab.highlighted);
+          ref.child("users/" + authData.uid + "/tabs/" + tab.id + "/highlighted").set(tab.highlighted);
+          return ref.child("users/" + authData.uid + "/profile/last_modified").set(Date.now());
         });
       })(tab));
     }

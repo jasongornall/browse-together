@@ -32,7 +32,6 @@ document.addEventListener('DOMContentLoaded', function() {
       $('body .header > .name').text(data.name);
       $('body .header > .image').attr('src', data.image);
       $('.logout').on('click', function(e) {
-        debugger;
         return chrome.runtime.sendMessage({
           type: 'logout'
         }, function(data) {
@@ -40,10 +39,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
       });
       processMessages = function(users) {
-        console.log(users, '123');
         clearTimeout(timeout);
         return timeout = setTimeout((function() {
-          return $('.users').html(teacup.render(function() {
+          $('.users').html(teacup.render(function() {
             var key, profile, tabs, val, _results;
             _results = [];
             for (key in users) {
@@ -56,34 +54,51 @@ document.addEventListener('DOMContentLoaded', function() {
                   img('.image', {
                     src: profile.image
                   });
-                  return span('.name', function() {
+                  span('.name', function() {
                     return profile.name;
+                  });
+                  return time('.time', {
+                    'datetime': new Date(profile.last_modified).toISOString()
+                  }, function() {
+                    return '';
                   });
                 });
                 return div('.tabs', function() {
-                  var key_t, val_t, _results1;
+                  var highlighted, key_t, val_t, _i, _len, _ref, _results1;
+                  _ref = [true, false];
                   _results1 = [];
-                  for (key_t in tabs) {
-                    val_t = tabs[key_t];
-                    _results1.push(div('.tab', {
-                      'data-highlighted': val_t.highlighted
-                    }, function() {
-                      val_t.icon || (val_t.icon = 'transparent.ico');
-                      img('.image', {
-                        src: val_t.icon
-                      });
-                      return span('.content', function() {
-                        div('.title', function() {
-                          return val_t.title;
-                        });
-                        return a('.link', {
-                          target: '_blank',
-                          href: val_t.url
+                  for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+                    highlighted = _ref[_i];
+                    _results1.push((function() {
+                      var _results2;
+                      _results2 = [];
+                      for (key_t in tabs) {
+                        val_t = tabs[key_t];
+                        if (val_t.highlighted !== highlighted) {
+                          continue;
+                        }
+                        _results2.push(div('.tab', {
+                          'data-highlighted': val_t.highlighted
                         }, function() {
-                          return val_t.url;
-                        });
-                      });
-                    }));
+                          val_t.icon || (val_t.icon = 'transparent.ico');
+                          img('.image', {
+                            src: val_t.icon
+                          });
+                          return span('.content', function() {
+                            div('.title', function() {
+                              return val_t.title;
+                            });
+                            return a('.link', {
+                              target: '_blank',
+                              href: val_t.url
+                            }, function() {
+                              return val_t.url;
+                            });
+                          });
+                        }));
+                      }
+                      return _results2;
+                    })());
                   }
                   return _results1;
                 });
@@ -91,6 +106,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             return _results;
           }));
+          return $('time.time').timeago();
         }), 1000);
       };
       chrome.runtime.sendMessage({
@@ -108,7 +124,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
       }));
       return $('.login').on('click', function(e) {
-        debugger;
         return window.open('https://jasongornall.github.io/browse-together/', '_blank');
       });
     }

@@ -1,4 +1,5 @@
-html body > .login {
+html body > .login,
+html body > .header .logout {
   cursor: pointer;
   text-align: center;
   padding: 5px;
@@ -9,7 +10,8 @@ html body > .login {
   border-radius: 3px;
   border: 1px solid #3079ed;
 }
-html body > .login:hover {
+html body > .login:hover,
+html body > .header .logout:hover {
   border: 1px solid #2f5bb7;
   color: #fff;
   text-shadow: 0 1px rgba(0,0,0,0.3);
@@ -26,14 +28,50 @@ html body .tab .image {
 html body .header .logout,
 html body .tab .logout {
   position: absolute;
-  right: 0;
+  right: 10px;
   padding: 7px 10px;
 }
 html body .users {
   padding-top: 10px;
 }
+html body .users > .user > .header {
+  cursor: pointer;
+  border-radius: 3px;
+  border: 1px solid #bdd4f9;
+  background-color: #e5efff;
+  background-image: -webkit-linear-gradient(top, #e5efff, #d2e2fb);
+  text-align: left;
+  font-size: 20px;
+  position: relative;
+}
+html body .users > .user > .header > .name {
+  vertical-align: middle;
+}
+html body .users > .user > .header > .time {
+  position: absolute;
+  right: 0;
+  font-size: 10px;
+  top: 7px;
+  right: 10px;
+}
+html body .users > .user > .header > .time:before {
+  content: 'Active ';
+}
+html body .users > .user > .header:hover {
+  background-color: ligthen(#357ae8, 30);
+  background-image: -webkit-linear-gradient(top, #e5efff, #bed4f8);
+}
 html body .users .tabs {
   padding-left: 30px;
+}
+html body .users .tabs .tab {
+  padding: 5px;
+}
+html body .users .tabs .tab:nth-child(even) {
+  background: #f1f1f1;
+}
+html body .users .tabs .tab:nth-child(odd) {
+  background: #fefefe;
 }
 html body .users .tabs .tab .content {
   display: inline-block;
