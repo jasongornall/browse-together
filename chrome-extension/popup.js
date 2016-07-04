@@ -80,8 +80,8 @@ document.addEventListener('DOMContentLoaded', function() {
                       return 'x';
                     });
                     if (!is_mutual) {
-                      return span(function() {
-                        return "* they can see you but you can't see them.. ask them t";
+                      return div(function() {
+                        return "* they can see you but you can't see them.. ask them to add " + data.uid;
                       });
                     }
                   }));

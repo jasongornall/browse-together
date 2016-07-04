@@ -27,6 +27,12 @@ html body > .nav {
   justify-content: space-around;
   padding: 10px;
 }
+html body > .nav > span {
+  cursor: pointer;
+}
+html body > .nav > span:hover {
+  color: #99f;
+}
 html body .blue-button {
   cursor: pointer;
   text-align: center;
