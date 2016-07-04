@@ -26,58 +26,62 @@ document.addEventListener 'DOMContentLoaded', ->
         $('body > .header > .name').text data.name
         $('body > .header > .image').attr 'src', data.image
       renderFriends = ->
-        $('body > .friends').html teacup.render ->
-          div '.data', ->
-            div ->
-              "People I want to watch browse"
-            div '.friends', ->
-              for friend, _ of data.friends or { }
-                div '.friend', 'data-uid': friend, ->
-                  span -> 'friend: '
-                  b -> "#{friend} "
-                  span '.remove', -> 'x'
 
-            div '.actions', ->
-              input '.friend', type: 'text'
-              span '.add-friend blue-button', -> 'add friend'
+        chrome.runtime.sendMessage {type: 'get-friends'}, (friends) ->
+          $('body > .friends').html teacup.render ->
+            div '.data', ->
               div ->
-                span '.submit blue-button', -> 'save'
+                "People I want to watch browse"
+              div '.friends', ->
+                for friend, is_mutual of friends or { }
+                  div '.friend', 'data-uid': friend, ->
+                    span -> 'friend: '
+                    b -> "#{friend} "
+                    span '.remove', -> 'x'
+                    if not is_mutual
+                      div -> "* they can see you but you can't see them.. ask them to friend ya!"
+
+              div '.actions', ->
+                input '.friend', type: 'text'
+                span '.add-friend blue-button', -> 'add friend'
+                div ->
+                  span '.submit blue-button', -> 'save'
 
 
-        $friends = $('body > .friends')
-        apply_listener = ->
           $friends = $('body > .friends')
-          $friends.find('.remove').off('click').on 'click', (e) ->
-            $el = $ e.currentTarget
-            $friend = $el.closest('.friend, .remove-friend')
-            return $friend.remove() if $friend.hasClass 'new-friend'
-            $el.closest('.friend, .remove-friend').toggleClass 'friend remove-friend'
+          apply_listener = ->
+            $friends = $('body > .friends')
+            $friends.find('.remove').off('click').on 'click', (e) ->
+              $el = $ e.currentTarget
+              $friend = $el.closest('.friend, .remove-friend')
+              return $friend.remove() if $friend.hasClass 'new-friend'
+              $el.closest('.friend, .remove-friend').toggleClass 'friend remove-friend'
 
-        apply_listener()
-        $friends.find('.add-friend').on 'click', (e) ->
-          friend = $friends.find('input.friend').val()
-          return unless friend
-          $friends.find('.friends').append teacup.render ->
-            div '.friend new-friend', 'data-uid': friend, ->
-              span -> 'friend: '
-              b -> "#{friend} "
-              span '.remove', -> 'x'
-          $friends.find('input.friend').val("")
           apply_listener()
+          $friends.find('.add-friend').on 'click', (e) ->
+            friend = $friends.find('input.friend').val()
+            return unless friend
+            $friends.find('.friends').append teacup.render ->
+              div '.friend new-friend', 'data-uid': friend, ->
+                span -> 'friend: '
+                b -> "#{friend} "
+                span '.remove', -> 'x'
+            $friends.find('input.friend').val("")
+            apply_listener()
 
-        $friends.find('.submit').on 'click', (e) ->
-          $new_arr = $friends.find('.friends > .friend')
-          list = {}
-          for friend in $new_arr
-            list[$(friend).data('uid')] = true
-          chrome.runtime.sendMessage {
-            type: 'save-friends'
-            list: list
-          }, (new_data) ->
-            return unless new_data
-            data = new_data
-            renderFriends()
-            renderUsers()
+          $friends.find('.submit').on 'click', (e) ->
+            $new_arr = $friends.find('.friends > .friend')
+            list = {}
+            for friend in $new_arr
+              list[$(friend).data('uid')] = true
+            chrome.runtime.sendMessage {
+              type: 'save-friends'
+              list: list
+            }, (new_data) ->
+              return unless new_data
+              data = new_data
+              renderFriends()
+              renderUsers()
       renderProfile = ->
         $('body > .profile').html teacup.render ->
           div '.data', ->

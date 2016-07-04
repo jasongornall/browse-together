@@ -63,11 +63,28 @@ chrome.runtime.onMessageExternal.addListener (request, sender, sendResponse) ->
         user_blob.name = request.github.displayName
         user_blob.image = request.github.profileImageURL
         user_blob.last_modified = Date.now()
-    ref.child("#{tab_location}/#{authData.uid}/profile").set user_blob
-    setupTabs authData
+    ref.child("#{tab_location}/#{authData.uid}/profile").set user_blob, ->
+      setupTabs authData
 
 chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
   switch request.type
+
+    when 'get-friends'
+      authData = ref.getAuth()
+      return sendResponse false unless authData
+      ref.child("#{tab_location}/#{authData.uid}/profile").once 'value', (doc) ->
+        friends = Object.keys doc.child('friends').val() or {}
+        console.log friends, 'zzz'
+        return_friends = {}
+        async.each friends, ((friend, next) ->
+          ref.child("private_users/#{friend}").once 'value', ((doc) ->
+            return_friends[friend] = true
+            next()
+          ), (error) ->
+            return_friends[friend] = false
+            next()
+        ), ->
+          sendResponse return_friends
 
     when 'get-local-user'
       authData = ref.getAuth()
@@ -122,22 +139,17 @@ chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
       authData = ref.getAuth()
       return sendResponse false unless authData
       ref.child("users").once 'value', (doc_main) ->
-        console.log 'a'
         ref.child("#{tab_location}/#{authData.uid}").once 'value', (doc) ->
           cur_val = doc_main.val() or {}
           cur_val[authData.uid] = doc.val()
-          console.log 'b', cur_val, doc.child('profile/friends').val()
           friends = Object.keys doc.child('profile/friends').val() or {}
-          console.log friends, 'zzz'
           async.each friends, ((friend, next) ->
-            console.log 'wwww'
             ref.child("private_users/#{friend}").once 'value', ((doc) ->
               cur_val[friend] or= doc?.val()
               next()
             ), (error) ->
               next()
           ), ->
-            console.log 'c', cur_val
             sendResponse cur_val
 
   return true
@@ -152,22 +164,22 @@ chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
     icon: tab.favIconUrl or ''
     title: tab.title or 'unkown'
     url: tab.url
-  }
-  ref.child("#{tab_location}/#{authData.uid}/profile/last_modified").set Date.now()
+  }, ->
+    ref.child("#{tab_location}/#{authData.uid}/profile/last_modified").set Date.now()
 
 chrome.tabs.onRemoved.addListener (tabId, changeInfo, tab) ->
   authData = ref.getAuth()
   return unless authData
-  ref.child("#{tab_location}/#{authData.uid}/tabs/#{tabId}").remove()
-  ref.child("#{tab_location}/#{authData.uid}/profile/last_modified").set Date.now()
+  ref.child("#{tab_location}/#{authData.uid}/tabs/#{tabId}").remove ->
+    ref.child("#{tab_location}/#{authData.uid}/profile/last_modified").set Date.now()
 
 chrome.tabs.onReplaced.addListener (new_tab_id, remove_tab_id) ->
   authData = ref.getAuth()
   return unless authData
   ref.child("#{tab_location}/#{authData.uid}/tabs/#{remove_tab_id}").once 'value', (obj) ->
-    ref.child("#{tab_location}/#{authData.uid}/tabs/#{new_tab_id}").set obj.val()
-    ref.child("#{tab_location}/#{authData.uid}/tabs/#{remove_tab_id}").remove()
-    ref.child("#{tab_location}/#{authData.uid}/profile/last_modified").set Date.now()
+    ref.child("#{tab_location}/#{authData.uid}/tabs/#{new_tab_id}").set obj.val(), ->
+      ref.child("#{tab_location}/#{authData.uid}/tabs/#{remove_tab_id}").remove ->
+        ref.child("#{tab_location}/#{authData.uid}/profile/last_modified").set Date.now()
 
 chrome.tabs.onActivated.addListener ({tabId, windowId}) ->
   authData = ref.getAuth()
@@ -177,5 +189,5 @@ chrome.tabs.onActivated.addListener ({tabId, windowId}) ->
       do (tab) ->
         ref.child("#{tab_location}/#{authData.uid}/tabs/#{tab.id}").once 'value', (obj) ->
           return if not obj?.val()
-          ref.child("#{tab_location}/#{authData.uid}/tabs/#{tab.id}/highlighted").set tab.highlighted
-          ref.child("#{tab_location}/#{authData.uid}/profile/last_modified").set Date.now()
+          ref.child("#{tab_location}/#{authData.uid}/tabs/#{tab.id}/highlighted").set tab.highlighted, ->
+            ref.child("#{tab_location}/#{authData.uid}/profile/last_modified").set Date.now()

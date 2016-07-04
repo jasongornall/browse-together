@@ -52,105 +52,114 @@ document.addEventListener('DOMContentLoaded', function() {
         return $('body > .header > .image').attr('src', data.image);
       };
       renderFriends = function() {
-        var $friends, apply_listener;
-        $('body > .friends').html(teacup.render(function() {
-          return div('.data', function() {
-            div(function() {
-              return "People I want to watch browse";
-            });
-            div('.friends', function() {
-              var friend, _, _ref, _results;
-              _ref = data.friends || {};
-              _results = [];
-              for (friend in _ref) {
-                _ = _ref[friend];
-                _results.push(div('.friend', {
-                  'data-uid': friend
-                }, function() {
-                  span(function() {
-                    return 'friend: ';
-                  });
-                  b(function() {
-                    return "" + friend + " ";
-                  });
-                  return span('.remove', function() {
-                    return 'x';
-                  });
-                }));
-              }
-              return _results;
-            });
-            return div('.actions', function() {
-              input('.friend', {
-                type: 'text'
+        return chrome.runtime.sendMessage({
+          type: 'get-friends'
+        }, function(friends) {
+          var $friends, apply_listener;
+          $('body > .friends').html(teacup.render(function() {
+            return div('.data', function() {
+              div(function() {
+                return "People I want to watch browse";
               });
-              span('.add-friend blue-button', function() {
-                return 'add friend';
+              div('.friends', function() {
+                var friend, is_mutual, _ref, _results;
+                _ref = friends || {};
+                _results = [];
+                for (friend in _ref) {
+                  is_mutual = _ref[friend];
+                  _results.push(div('.friend', {
+                    'data-uid': friend
+                  }, function() {
+                    span(function() {
+                      return 'friend: ';
+                    });
+                    b(function() {
+                      return "" + friend + " ";
+                    });
+                    span('.remove', function() {
+                      return 'x';
+                    });
+                    if (!is_mutual) {
+                      return div(function() {
+                        return "* they can see you but you can't see them.. ask them to friend ya!";
+                      });
+                    }
+                  }));
+                }
+                return _results;
               });
-              return div(function() {
-                return span('.submit blue-button', function() {
-                  return 'save';
+              return div('.actions', function() {
+                input('.friend', {
+                  type: 'text'
+                });
+                span('.add-friend blue-button', function() {
+                  return 'add friend';
+                });
+                return div(function() {
+                  return span('.submit blue-button', function() {
+                    return 'save';
+                  });
                 });
               });
             });
-          });
-        }));
-        $friends = $('body > .friends');
-        apply_listener = function() {
-          $friends = $('body > .friends');
-          return $friends.find('.remove').off('click').on('click', function(e) {
-            var $el, $friend;
-            $el = $(e.currentTarget);
-            $friend = $el.closest('.friend, .remove-friend');
-            if ($friend.hasClass('new-friend')) {
-              return $friend.remove();
-            }
-            return $el.closest('.friend, .remove-friend').toggleClass('friend remove-friend');
-          });
-        };
-        apply_listener();
-        $friends.find('.add-friend').on('click', function(e) {
-          var friend;
-          friend = $friends.find('input.friend').val();
-          if (!friend) {
-            return;
-          }
-          $friends.find('.friends').append(teacup.render(function() {
-            return div('.friend new-friend', {
-              'data-uid': friend
-            }, function() {
-              span(function() {
-                return 'friend: ';
-              });
-              b(function() {
-                return "" + friend + " ";
-              });
-              return span('.remove', function() {
-                return 'x';
-              });
-            });
           }));
-          $friends.find('input.friend').val("");
-          return apply_listener();
-        });
-        return $friends.find('.submit').on('click', function(e) {
-          var $new_arr, friend, list, _i, _len;
-          $new_arr = $friends.find('.friends > .friend');
-          list = {};
-          for (_i = 0, _len = $new_arr.length; _i < _len; _i++) {
-            friend = $new_arr[_i];
-            list[$(friend).data('uid')] = true;
-          }
-          return chrome.runtime.sendMessage({
-            type: 'save-friends',
-            list: list
-          }, function(new_data) {
-            if (!new_data) {
+          $friends = $('body > .friends');
+          apply_listener = function() {
+            $friends = $('body > .friends');
+            return $friends.find('.remove').off('click').on('click', function(e) {
+              var $el, $friend;
+              $el = $(e.currentTarget);
+              $friend = $el.closest('.friend, .remove-friend');
+              if ($friend.hasClass('new-friend')) {
+                return $friend.remove();
+              }
+              return $el.closest('.friend, .remove-friend').toggleClass('friend remove-friend');
+            });
+          };
+          apply_listener();
+          $friends.find('.add-friend').on('click', function(e) {
+            var friend;
+            friend = $friends.find('input.friend').val();
+            if (!friend) {
               return;
             }
-            data = new_data;
-            renderFriends();
-            return renderUsers();
+            $friends.find('.friends').append(teacup.render(function() {
+              return div('.friend new-friend', {
+                'data-uid': friend
+              }, function() {
+                span(function() {
+                  return 'friend: ';
+                });
+                b(function() {
+                  return "" + friend + " ";
+                });
+                return span('.remove', function() {
+                  return 'x';
+                });
+              });
+            }));
+            $friends.find('input.friend').val("");
+            return apply_listener();
+          });
+          return $friends.find('.submit').on('click', function(e) {
+            var $new_arr, friend, list, _i, _len;
+            $new_arr = $friends.find('.friends > .friend');
+            list = {};
+            for (_i = 0, _len = $new_arr.length; _i < _len; _i++) {
+              friend = $new_arr[_i];
+              list[$(friend).data('uid')] = true;
+            }
+            return chrome.runtime.sendMessage({
+              type: 'save-friends',
+              list: list
+            }, function(new_data) {
+              if (!new_data) {
+                return;
+              }
+              data = new_data;
+              renderFriends();
+              return renderUsers();
+            });
           });
         });
       };

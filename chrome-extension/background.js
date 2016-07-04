@@ -99,14 +99,38 @@ chrome.runtime.onMessageExternal.addListener(function(request, sender, sendRespo
         user_blob.image = request.github.profileImageURL;
         user_blob.last_modified = Date.now();
     }
-    ref.child("" + tab_location + "/" + authData.uid + "/profile").set(user_blob);
-    return setupTabs(authData);
+    return ref.child("" + tab_location + "/" + authData.uid + "/profile").set(user_blob, function() {
+      return setupTabs(authData);
+    });
   });
 });
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   var authData;
   switch (request.type) {
+    case 'get-friends':
+      authData = ref.getAuth();
+      if (!authData) {
+        return sendResponse(false);
+      }
+      ref.child("" + tab_location + "/" + authData.uid + "/profile").once('value', function(doc) {
+        var friends, return_friends;
+        friends = Object.keys(doc.child('friends').val() || {});
+        console.log(friends, 'zzz');
+        return_friends = {};
+        return async.each(friends, (function(friend, next) {
+          return ref.child("private_users/" + friend).once('value', (function(doc) {
+            return_friends[friend] = true;
+            return next();
+          }), function(error) {
+            return_friends[friend] = false;
+            return next();
+          });
+        }), function() {
+          return sendResponse(return_friends);
+        });
+      });
+      break;
     case 'get-local-user':
       authData = ref.getAuth();
       if (!authData) {
@@ -187,16 +211,12 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         return sendResponse(false);
       }
       ref.child("users").once('value', function(doc_main) {
-        console.log('a');
         return ref.child("" + tab_location + "/" + authData.uid).once('value', function(doc) {
           var cur_val, friends;
           cur_val = doc_main.val() || {};
           cur_val[authData.uid] = doc.val();
-          console.log('b', cur_val, doc.child('profile/friends').val());
           friends = Object.keys(doc.child('profile/friends').val() || {});
-          console.log(friends, 'zzz');
           return async.each(friends, (function(friend, next) {
-            console.log('wwww');
             return ref.child("private_users/" + friend).once('value', (function(doc) {
               cur_val[friend] || (cur_val[friend] = doc != null ? doc.val() : void 0);
               return next();
@@ -204,7 +224,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
               return next();
             });
           }), function() {
-            console.log('c', cur_val);
             return sendResponse(cur_val);
           });
         });
@@ -222,13 +241,14 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
   if (!authData) {
     return;
   }
-  ref.child("" + tab_location + "/" + authData.uid + "/tabs/" + tabId).set({
+  return ref.child("" + tab_location + "/" + authData.uid + "/tabs/" + tabId).set({
     highlighted: tab.highlighted || false,
     icon: tab.favIconUrl || '',
     title: tab.title || 'unkown',
     url: tab.url
+  }, function() {
+    return ref.child("" + tab_location + "/" + authData.uid + "/profile/last_modified").set(Date.now());
   });
-  return ref.child("" + tab_location + "/" + authData.uid + "/profile/last_modified").set(Date.now());
 });
 
 chrome.tabs.onRemoved.addListener(function(tabId, changeInfo, tab) {
@@ -237,8 +257,9 @@ chrome.tabs.onRemoved.addListener(function(tabId, changeInfo, tab) {
   if (!authData) {
     return;
   }
-  ref.child("" + tab_location + "/" + authData.uid + "/tabs/" + tabId).remove();
-  return ref.child("" + tab_location + "/" + authData.uid + "/profile/last_modified").set(Date.now());
+  return ref.child("" + tab_location + "/" + authData.uid + "/tabs/" + tabId).remove(function() {
+    return ref.child("" + tab_location + "/" + authData.uid + "/profile/last_modified").set(Date.now());
+  });
 });
 
 chrome.tabs.onReplaced.addListener(function(new_tab_id, remove_tab_id) {
@@ -248,9 +269,11 @@ chrome.tabs.onReplaced.addListener(function(new_tab_id, remove_tab_id) {
     return;
   }
   return ref.child("" + tab_location + "/" + authData.uid + "/tabs/" + remove_tab_id).once('value', function(obj) {
-    ref.child("" + tab_location + "/" + authData.uid + "/tabs/" + new_tab_id).set(obj.val());
-    ref.child("" + tab_location + "/" + authData.uid + "/tabs/" + remove_tab_id).remove();
-    return ref.child("" + tab_location + "/" + authData.uid + "/profile/last_modified").set(Date.now());
+    return ref.child("" + tab_location + "/" + authData.uid + "/tabs/" + new_tab_id).set(obj.val(), function() {
+      return ref.child("" + tab_location + "/" + authData.uid + "/tabs/" + remove_tab_id).remove(function() {
+        return ref.child("" + tab_location + "/" + authData.uid + "/profile/last_modified").set(Date.now());
+      });
+    });
   });
 });
 
@@ -272,8 +295,9 @@ chrome.tabs.onActivated.addListener(function(_arg) {
           if (!(obj != null ? obj.val() : void 0)) {
             return;
           }
-          ref.child("" + tab_location + "/" + authData.uid + "/tabs/" + tab.id + "/highlighted").set(tab.highlighted);
-          return ref.child("" + tab_location + "/" + authData.uid + "/profile/last_modified").set(Date.now());
+          return ref.child("" + tab_location + "/" + authData.uid + "/tabs/" + tab.id + "/highlighted").set(tab.highlighted, function() {
+            return ref.child("" + tab_location + "/" + authData.uid + "/profile/last_modified").set(Date.now());
+          });
         });
       })(tab));
     }

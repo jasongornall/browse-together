@@ -137,10 +137,6 @@ html body > .users > .user > .header > .time {
 html body > .users > .user > .header > .time:before {
   content: 'Active ';
 }
-html body > .users > .user > .header:hover {
-  background-color: ligthen(#357ae8, 30);
-  background-image: -webkit-linear-gradient(top, #e5efff, #bed4f8);
-}
 html body > .users .tabs {
   padding-left: 30px;
 }
