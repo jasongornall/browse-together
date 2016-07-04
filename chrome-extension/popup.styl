@@ -39,7 +39,13 @@ html
         font-size 20px
         position relative
         > .name
-          vertical-align middle
+          vertical-align: middle;
+          max-width: 250px;
+          overflow: hidden;
+          display: inline-block;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+
         > .time
           position: absolute;
           right: 0;

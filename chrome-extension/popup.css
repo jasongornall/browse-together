@@ -46,6 +46,11 @@ html body .users > .user > .header {
 }
 html body .users > .user > .header > .name {
   vertical-align: middle;
+  max-width: 250px;
+  overflow: hidden;
+  display: inline-block;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 html body .users > .user > .header > .time {
   position: absolute;
