@@ -97,7 +97,7 @@ html body > .profile {
 html body > .profile .bold {
   font-weight: bold;
 }
-html body > .profile input {
+html body > .profile input:not(.private) {
   min-width: 250px;
 }
 html body > .profile .data {
