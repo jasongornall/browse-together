@@ -47,7 +47,7 @@ setupTabs = function(authData) {
             friend = friends[_j];
             _results.push((function(friend) {
               return ref.child("private_users/" + friend).on('value', (function(doc) {
-                doc_val[friend] = doc.val();
+                doc_val[friend] || (doc_val[friend] = doc.val());
                 return sendNewMessages(doc_val);
               }), function(error) {
                 return sendNewMessages(doc_val);

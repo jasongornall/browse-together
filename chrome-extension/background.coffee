@@ -30,7 +30,7 @@ setupTabs = (authData) ->
           for friend in friends
             do (friend) ->
               ref.child("private_users/#{friend}").on 'value', ((doc) ->
-                doc_val[friend] = doc.val()
+                doc_val[friend] or= doc.val()
                 sendNewMessages doc_val
               ), (error) ->
                 sendNewMessages doc_val
