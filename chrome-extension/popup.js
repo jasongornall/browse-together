@@ -4,6 +4,9 @@ var timeout;
 timeout = null;
 
 document.addEventListener('DOMContentLoaded', function() {
+  var state;
+  state = localStorage.getItem('body-state') || 'private-users';
+  $('body').attr('data-state', state);
   return chrome.runtime.sendMessage({
     type: 'get-local-user'
   }, function(data) {
@@ -240,7 +243,6 @@ document.addEventListener('DOMContentLoaded', function() {
               return;
             }
             data = new_data;
-            debugger;
             renderHeader();
             renderUsers();
             return renderProfile();
@@ -250,15 +252,26 @@ document.addEventListener('DOMContentLoaded', function() {
       renderUsers = function() {
         var processMessages;
         processMessages = function(users, location) {
-          var $users;
+          var $users, user_sort;
           if (location == null) {
             location = "users";
           }
+          user_sort = Object.keys(users || {});
+          user_sort.sort(function(a, b) {
+            if (a === data.uid) {
+              return -1;
+            }
+            if (b === data.uid) {
+              return 1;
+            }
+            return a > b;
+          });
           $users = $("body > ." + location);
           $users.html(teacup.render(function() {
-            var key, profile, tabs, val, _ref, _results;
+            var key, profile, tabs, val, _i, _len, _ref, _results;
             _results = [];
-            for (key in users) {
+            for (_i = 0, _len = user_sort.length; _i < _len; _i++) {
+              key = user_sort[_i];
               val = users[key];
               _ref = val || {}, profile = _ref.profile, tabs = _ref.tabs;
               if (!profile) {
@@ -284,11 +297,11 @@ document.addEventListener('DOMContentLoaded', function() {
                   });
                 });
                 return div('.tabs', function() {
-                  var highlighted, key_t, val_t, _i, _len, _ref1, _results1;
+                  var highlighted, key_t, val_t, _j, _len1, _ref1, _results1;
                   _ref1 = [true, false];
                   _results1 = [];
-                  for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-                    highlighted = _ref1[_i];
+                  for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+                    highlighted = _ref1[_j];
                     _results1.push((function() {
                       var _results2;
                       _results2 = [];
@@ -373,7 +386,8 @@ document.addEventListener('DOMContentLoaded', function() {
       $('body > .nav > span').on('click', function(e) {
         var $el;
         $el = $(e.currentTarget);
-        return $el.closest('body').attr('data-state', $el.attr('class'));
+        $el.closest('body').attr('data-state', $el.attr('class'));
+        return localStorage.setItem('body-state', $el.attr('class'));
       });
       renderHeader();
       renderFriends();

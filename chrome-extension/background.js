@@ -3,7 +3,7 @@ var auth, ref, setupTabs, tab_location;
 
 ref = new Firebase("https://browse-together.firebaseio.com");
 
-tab_location = "users";
+tab_location = "nope";
 
 setupTabs = function(authData) {
   ref.child("" + tab_location + "/" + authData.uid + "/tabs").onDisconnect().remove();

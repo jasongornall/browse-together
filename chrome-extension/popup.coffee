@@ -1,5 +1,7 @@
 timeout = null
 document.addEventListener 'DOMContentLoaded', ->
+  state = localStorage.getItem('body-state') or 'private-users'
+  $('body').attr 'data-state', state
   chrome.runtime.sendMessage {
     type: 'get-local-user'
   }, (data) ->
@@ -120,16 +122,22 @@ document.addEventListener 'DOMContentLoaded', ->
           }, (new_data) ->
             return unless new_data
             data = new_data
-            debugger;
             renderHeader()
             renderUsers()
             renderProfile()
 
       renderUsers = ->
         processMessages = (users, location="users") ->
+          user_sort = Object.keys users or {}
+          user_sort.sort (a, b) ->
+            return -1 if a is data.uid
+            return 1 if b is data.uid
+            return a > b
+
           $users = $("body > .#{location}")
           $users.html teacup.render ->
-            for key, val of users
+            for key in user_sort
+              val = users[key]
               {profile, tabs} = val or {}
               continue unless profile
               continue unless Object.keys(tabs or {}).length
@@ -174,6 +182,7 @@ document.addEventListener 'DOMContentLoaded', ->
       $('body > .nav > span').on 'click', (e) ->
         $el = $ e.currentTarget
         $el.closest('body').attr 'data-state', $el.attr('class')
+        localStorage.setItem 'body-state', $el.attr('class')
 
       renderHeader()
       renderFriends()

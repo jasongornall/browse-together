@@ -1,5 +1,5 @@
 ref = new Firebase("https://browse-together.firebaseio.com");
-tab_location = "users"
+tab_location = "nope"
 setupTabs = (authData) ->
   ref.child("#{tab_location}/#{authData.uid}/tabs").onDisconnect().remove()
   chrome.tabs.query {}, (tabs) ->
