@@ -1,6 +1,7 @@
 html body > .users,
 html body > .profile,
-html body > .friends {
+html body > .friends,
+html body > .private-users {
   display: none;
   padding: 5px 0;
 }
@@ -20,6 +21,12 @@ html body[data-state="friends"] > .friends {
   display: block;
 }
 html body[data-state="friends"] > .nav .friends {
+  color: #00f;
+}
+html body[data-state="private-users"] > .private-users {
+  display: block;
+}
+html body[data-state="private-users"] > .nav .private-users {
   color: #00f;
 }
 html body > .nav {
@@ -112,10 +119,12 @@ html body > .profile .actions {
   justify-content: space-around;
   padding: 10px;
 }
-html body > .users {
+html body > .users,
+html body > .private-users {
   padding-top: 10px;
 }
-html body > .users > .user > .header {
+html body > .users > .user > .header,
+html body > .private-users > .user > .header {
   border-radius: 3px;
   border: 1px solid #bdd4f9;
   background-color: #e5efff;
@@ -124,7 +133,8 @@ html body > .users > .user > .header {
   font-size: 20px;
   position: relative;
 }
-html body > .users > .user > .header > .name {
+html body > .users > .user > .header > .name,
+html body > .private-users > .user > .header > .name {
   vertical-align: middle;
   max-width: 220px;
   overflow: hidden;
@@ -132,29 +142,36 @@ html body > .users > .user > .header > .name {
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-html body > .users > .user > .header > .time {
+html body > .users > .user > .header > .time,
+html body > .private-users > .user > .header > .time {
   position: absolute;
   right: 0;
   font-size: 10px;
   top: 7px;
   right: 10px;
 }
-html body > .users > .user > .header > .time:before {
+html body > .users > .user > .header > .time:before,
+html body > .private-users > .user > .header > .time:before {
   content: 'Active ';
 }
-html body > .users .tabs {
+html body > .users .tabs,
+html body > .private-users .tabs {
   padding-left: 30px;
 }
-html body > .users .tabs .tab {
+html body > .users .tabs .tab,
+html body > .private-users .tabs .tab {
   padding: 5px;
 }
-html body > .users .tabs .tab:nth-child(even) {
+html body > .users .tabs .tab:nth-child(even),
+html body > .private-users .tabs .tab:nth-child(even) {
   background: #f1f1f1;
 }
-html body > .users .tabs .tab:nth-child(odd) {
+html body > .users .tabs .tab:nth-child(odd),
+html body > .private-users .tabs .tab:nth-child(odd) {
   background: #fefefe;
 }
-html body > .users .tabs .tab .content {
+html body > .users .tabs .tab .content,
+html body > .private-users .tabs .tab .content {
   display: inline-block;
   vertical-align: middle;
   font-size: 9px;
@@ -164,11 +181,13 @@ html body > .users .tabs .tab .content {
   white-space: nowrap;
   max-width: 300px;
 }
-html body > .users .tabs .tab .image {
+html body > .users .tabs .tab .image,
+html body > .private-users .tabs .tab .image {
   width: 16px;
   height: 16px;
 }
-html body > .users .tabs .tab[data-highlighted] .content {
+html body > .users .tabs .tab[data-highlighted] .content,
+html body > .private-users .tabs .tab[data-highlighted] .content {
   font-weight: bold;
   color: #000;
 }

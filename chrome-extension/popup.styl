@@ -1,6 +1,6 @@
 html
   body
-    > .users, > .profile, > .friends
+    > .users, > .profile, > .friends, > .private-users
       display none
       padding 5px 0
     &[data-state="users"]
@@ -17,6 +17,11 @@ html
       > .friends
         display block
       > .nav .friends
+        color blue
+    &[data-state="private-users"]
+      > .private-users
+        display block
+      > .nav .private-users
         color blue
 
     > .nav
@@ -87,7 +92,7 @@ html
         display: flex;
         justify-content: space-around;
         padding: 10px;
-    > .users
+    > .users, > .private-users
       padding-top 10px
       > .user > .header
         border-radius: 3px;

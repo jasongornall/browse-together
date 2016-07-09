@@ -8,7 +8,7 @@ tab_location = "users";
 setupTabs = function(authData) {
   ref.child("" + tab_location + "/" + authData.uid + "/tabs").onDisconnect().remove();
   return chrome.tabs.query({}, function(tabs) {
-    var new_tab_data, sendNewMessages, tab, timeout_id, _i, _len;
+    var new_tab_data, sendNewMessages, tab, _i, _len;
     new_tab_data = {};
     for (_i = 0, _len = tabs.length; _i < _len; _i++) {
       tab = tabs[_i];
@@ -19,43 +19,61 @@ setupTabs = function(authData) {
         url: tab.url
       };
     }
-    timeout_id = null;
     sendNewMessages = function(messages) {
-      if (timeout_id) {
-        clearTimeout(timeout_id);
-      }
-      return timeout_id = setTimeout((function() {
-        chrome.browserAction.setIcon({
-          path: "icon2.png"
-        });
-        chrome.browserAction.setBadgeText({
-          text: 'on'
-        });
-        return chrome.runtime.sendMessage(messages);
-      }), 200);
+      chrome.browserAction.setIcon({
+        path: "icon2.png"
+      });
+      chrome.browserAction.setBadgeText({
+        text: 'on'
+      });
+      return chrome.runtime.sendMessage(messages);
     };
     return ref.child("" + tab_location + "/" + authData.uid + "/tabs").set(new_tab_data, function() {
-      return ref.child("users").on('value', function(user_doc) {
-        return ref.child("" + tab_location + "/" + authData.uid + "/profile/friends").on('value', function(doc) {
-          var doc_val, friend, friends, friends_val, _j, _len1, _results;
-          doc_val = user_doc.val() || {};
-          friends_val = doc.val() || {};
-          friends_val[authData.uid] = true;
-          friends = Object.keys(friends_val || []);
-          _results = [];
-          for (_j = 0, _len1 = friends.length; _j < _len1; _j++) {
-            friend = friends[_j];
-            _results.push((function(friend) {
-              return ref.child("private_users/" + friend).on('value', (function(doc) {
-                doc_val[friend] || (doc_val[friend] = doc.val());
-                return sendNewMessages(doc_val);
-              }), function(error) {
-                return sendNewMessages(doc_val);
-              });
-            })(friend));
-          }
-          return _results;
+      var doc_val;
+      ref.child("users").on('value', function(user_doc) {
+        return sendNewMessages({
+          type: 'users',
+          data: user_doc.val()
         });
+      });
+      doc_val = {};
+      return ref.child("" + tab_location + "/" + authData.uid + "/profile/friends").on('value', function(doc) {
+        var friend, friends, friends_val, val, _j, _len1, _results;
+        for (friend in doc_val) {
+          val = doc_val[friend];
+          ref.child("users/" + friend).off('value');
+          ref.child("private_users/" + friend).off('value');
+        }
+        doc_val = {};
+        friends_val = doc.val() || {};
+        friends_val[authData.uid] = true;
+        friends = Object.keys(friends_val || []);
+        _results = [];
+        for (_j = 0, _len1 = friends.length; _j < _len1; _j++) {
+          friend = friends[_j];
+          _results.push((function(friend) {
+            console.log('added on once');
+            return ref.child("users/" + friend).on('value', function(doc) {
+              doc_val[friend] = doc.val();
+              if (Boolean(doc_val[friend])) {
+                console.log('UPDATED');
+                return sendNewMessages({
+                  type: 'private-users',
+                  data: doc_val
+                });
+              } else {
+                return ref.child("private_users/" + friend).on('value', function(doc) {
+                  doc_val[friend] = doc.val();
+                  return sendNewMessages({
+                    type: 'private-users',
+                    data: doc_val
+                  });
+                });
+              }
+            });
+          })(friend));
+        }
+        return _results;
       });
     });
   });
@@ -133,11 +151,13 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         return_friends = {};
         return async.each(friends, (function(friend, next) {
           return ref.child("private_users/" + friend).once('value', (function(doc) {
-            return_friends[friend] = true;
+            return_friends[friend] = doc.child('profile/name').val();
             return next();
           }), function(error) {
-            return_friends[friend] = false;
-            return next();
+            return ref.child("users/" + friend).once('value', function(doc) {
+              return_friends[friend] = doc.child('profile/name').val();
+              return next();
+            });
           });
         }), function() {
           return sendResponse(return_friends);
@@ -209,9 +229,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             user_val.profile.uid = authData.uid;
             return sendResponse(user_val.profile);
           }
-          console.log("" + tab_original + "/" + authData.uid, 'a');
           return ref.child("" + tab_original + "/" + authData.uid).remove(function() {
-            console.log("" + tab_location + "/" + authData.uid, 'b', user_val);
             return ref.child("" + tab_location + "/" + authData.uid).set(user_val, function() {
               user_val.profile.uid = authData.uid;
               return sendResponse(user_val.profile);
@@ -225,22 +243,35 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       if (!authData) {
         return sendResponse(false);
       }
+      console.log('call happened');
       ref.child("users").once('value', function(doc_main) {
-        return ref.child("" + tab_location + "/" + authData.uid).once('value', function(doc) {
-          var cur_val, friends;
-          cur_val = doc_main.val() || {};
-          cur_val[authData.uid] = doc.val();
-          friends = Object.keys(doc.child('profile/friends').val() || {});
-          return async.each(friends, (function(friend, next) {
-            return ref.child("private_users/" + friend).once('value', (function(doc) {
+        console.log('response');
+        return sendResponse(doc_main.val());
+      });
+      break;
+    case 'friends-messages':
+      console.log('friends call');
+      authData = ref.getAuth();
+      if (!authData) {
+        return sendResponse(false);
+      }
+      ref.child("" + tab_location + "/" + authData.uid).once('value', function(doc) {
+        var cur_val, friends;
+        cur_val = {};
+        cur_val[authData.uid] = doc.val();
+        friends = Object.keys(doc.child('profile/friends').val() || {});
+        return async.each(friends, (function(friend, next) {
+          return ref.child("private_users/" + friend).once('value', (function(doc) {
+            cur_val[friend] || (cur_val[friend] = doc != null ? doc.val() : void 0);
+            return next();
+          }), function(error) {
+            return ref.child("users/" + friend).once('value', function(doc) {
               cur_val[friend] || (cur_val[friend] = doc != null ? doc.val() : void 0);
               return next();
-            }), function(error) {
-              return next();
             });
-          }), function() {
-            return sendResponse(cur_val);
           });
+        }), function() {
+          return sendResponse(cur_val);
         });
       });
   }
@@ -302,22 +333,20 @@ chrome.tabs.onActivated.addListener(function(_arg) {
     return;
   }
   return chrome.tabs.getAllInWindow(windowId, function(arr) {
-    var tab, _i, _len, _ref, _results;
-    _ref = arr || [];
-    _results = [];
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      tab = _ref[_i];
-      _results.push((function(tab) {
-        return ref.child("" + tab_location + "/" + authData.uid + "/tabs/" + tab.id).once('value', function(obj) {
-          if (!(obj != null ? obj.val() : void 0)) {
-            return;
-          }
-          return ref.child("" + tab_location + "/" + authData.uid + "/tabs/" + tab.id + "/highlighted").set(tab.highlighted, function() {
-            return ref.child("" + tab_location + "/" + authData.uid + "/profile/last_modified").set(Date.now());
-          });
-        });
-      })(tab));
-    }
-    return _results;
+    return ref.child("" + tab_location + "/" + authData.uid).once('value', function(user_doc) {
+      var tab, user, _base, _i, _len, _name, _ref;
+      user = user_doc.val();
+      _ref = arr || [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        tab = _ref[_i];
+        if ((_base = user.tabs)[_name = tab.id] == null) {
+          _base[_name] = {};
+        }
+        user.tabs[tab.id].highlighted = tab.highlighted;
+        user.profile.last_modifed = Date.now();
+      }
+      console.log(user.tabs, 'sadasdsa');
+      return ref.child("" + tab_location + "/" + authData.uid).set(user);
+    });
   });
 });

@@ -11,29 +11,39 @@ setupTabs = (authData) ->
         title: tab.title or 'unkown'
         url: tab.url
       }
-    timeout_id = null
     sendNewMessages = (messages) ->
-      clearTimeout timeout_id if timeout_id
-      timeout_id = setTimeout ( ->
-        chrome.browserAction.setIcon {path:"icon2.png"}
-        chrome.browserAction.setBadgeText {text: 'on'}
-        chrome.runtime.sendMessage messages
-      ), 200
+      chrome.browserAction.setIcon {path:"icon2.png"}
+      chrome.browserAction.setBadgeText {text: 'on'}
+      chrome.runtime.sendMessage messages
+
     ref.child("#{tab_location}/#{authData.uid}/tabs").set new_tab_data, ->
       ref.child("users").on 'value', (user_doc) ->
-        ref.child("#{tab_location}/#{authData.uid}/profile/friends").on 'value', (doc) ->
-          doc_val = user_doc.val() or {}
-          friends_val = doc.val() or {}
-          friends_val[authData.uid] = true
-          friends = Object.keys friends_val or []
+        sendNewMessages {type: 'users', data: user_doc.val()}
 
-          for friend in friends
-            do (friend) ->
-              ref.child("private_users/#{friend}").on 'value', ((doc) ->
-                doc_val[friend] or= doc.val()
-                sendNewMessages doc_val
-              ), (error) ->
-                sendNewMessages doc_val
+      doc_val = {}
+      ref.child("#{tab_location}/#{authData.uid}/profile/friends").on 'value', (doc) ->
+        for friend, val of doc_val
+          ref.child("users/#{friend}").off 'value'
+          ref.child("private_users/#{friend}").off 'value'
+        doc_val = {}
+        friends_val = doc.val() or {}
+        friends_val[authData.uid] = true
+        friends = Object.keys friends_val or []
+
+        for friend in friends
+          do (friend) ->
+            console.log 'added on once'
+            ref.child("users/#{friend}").on 'value', (doc) ->
+              doc_val[friend] = doc.val()
+              if Boolean doc_val[friend]
+                console.log 'UPDATED'
+                sendNewMessages {type: 'private-users', data: doc_val}
+              else
+                ref.child("private_users/#{friend}").on 'value', (doc) ->
+                  doc_val[friend] = doc.val()
+                  sendNewMessages {type: 'private-users', data: doc_val}
+
+
 
 # attempt oauth
 auth = localStorage.getItem 'auth'
@@ -88,11 +98,12 @@ chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
         return_friends = {}
         async.each friends, ((friend, next) ->
           ref.child("private_users/#{friend}").once 'value', ((doc) ->
-            return_friends[friend] = true
+            return_friends[friend] = doc.child('profile/name').val()
             next()
           ), (error) ->
-            return_friends[friend] = false
-            next()
+            ref.child("users/#{friend}").once 'value', (doc) ->
+              return_friends[friend] = doc.child('profile/name').val()
+              next()
         ), ->
           sendResponse return_friends
 
@@ -142,9 +153,7 @@ chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
           if tab_original is tab_location
             user_val.profile.uid = authData.uid
             return sendResponse user_val.profile
-          console.log "#{tab_original}/#{authData.uid}", 'a'
           ref.child("#{tab_original}/#{authData.uid}").remove ->
-            console.log "#{tab_location}/#{authData.uid}", 'b', user_val
             ref.child("#{tab_location}/#{authData.uid}").set user_val, ->
               user_val.profile.uid = authData.uid
               sendResponse user_val.profile
@@ -152,19 +161,29 @@ chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     when 'messages'
       authData = ref.getAuth()
       return sendResponse false unless authData
+      console.log 'call happened'
       ref.child("users").once 'value', (doc_main) ->
-        ref.child("#{tab_location}/#{authData.uid}").once 'value', (doc) ->
-          cur_val = doc_main.val() or {}
-          cur_val[authData.uid] = doc.val()
-          friends = Object.keys doc.child('profile/friends').val() or {}
-          async.each friends, ((friend, next) ->
-            ref.child("private_users/#{friend}").once 'value', ((doc) ->
+        console.log 'response'
+        sendResponse doc_main.val()
+
+    when 'friends-messages'
+      console.log 'friends call'
+      authData = ref.getAuth()
+      return sendResponse false unless authData
+      ref.child("#{tab_location}/#{authData.uid}").once 'value', (doc) ->
+        cur_val = {}
+        cur_val[authData.uid] = doc.val()
+        friends = Object.keys doc.child('profile/friends').val() or {}
+        async.each friends, ((friend, next) ->
+          ref.child("private_users/#{friend}").once 'value', ((doc) ->
+            cur_val[friend] or= doc?.val()
+            next()
+          ), (error) ->
+            ref.child("users/#{friend}").once 'value', (doc) ->
               cur_val[friend] or= doc?.val()
               next()
-            ), (error) ->
-              next()
-          ), ->
-            sendResponse cur_val
+        ), ->
+          sendResponse cur_val
 
   return true
 
@@ -200,9 +219,11 @@ chrome.tabs.onActivated.addListener ({tabId, windowId}) ->
   authData = ref.getAuth()
   return unless authData
   chrome.tabs.getAllInWindow windowId, (arr) ->
-    for tab in arr or []
-      do (tab) ->
-        ref.child("#{tab_location}/#{authData.uid}/tabs/#{tab.id}").once 'value', (obj) ->
-          return if not obj?.val()
-          ref.child("#{tab_location}/#{authData.uid}/tabs/#{tab.id}/highlighted").set tab.highlighted, ->
-            ref.child("#{tab_location}/#{authData.uid}/profile/last_modified").set Date.now()
+    ref.child("#{tab_location}/#{authData.uid}").once 'value', (user_doc) ->
+      user = user_doc.val()
+      for tab in arr or []
+        user.tabs[tab.id] ?= {}
+        user.tabs[tab.id].highlighted = tab.highlighted
+        user.profile.last_modifed = Date.now()
+      console.log user.tabs, 'sadasdsa'
+      ref.child("#{tab_location}/#{authData.uid}").set user

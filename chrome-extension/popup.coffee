@@ -13,11 +13,14 @@ document.addEventListener 'DOMContentLoaded', ->
           span '.name', -> ''
 
         div '.nav', ->
-          span '.users', -> 'users'
+          span '.users', -> 'public users'
+          span '.private-users', -> 'my friends'
           span '.profile', -> 'profile'
-          span '.friends', -> 'friends'
+          span '.friends', -> 'friends add/remove'
         div '.users', ->
           div -> 'Loading...'
+        div '.private-users', ->
+          div -> 'loading...'
         div '.profile', ->
           div -> 'Loading...'
         div '.friends', ->
@@ -33,13 +36,12 @@ document.addEventListener 'DOMContentLoaded', ->
               div ->
                 "People I want to watch browse"
               div '.friends', ->
-                for friend, is_mutual of friends or { }
+                for friend, name of friends
                   div '.friend', 'data-uid': friend, ->
                     span -> 'friend: '
                     b -> "#{friend} "
+                    span ->"(#{name})" if name
                     span '.remove', -> 'x'
-                    if not is_mutual
-                      div -> "* they can see you but you can't see them.. ask them to add #{data.uid}"
 
               div '.actions', ->
                 input '.friend', type: 'text'
@@ -124,35 +126,44 @@ document.addEventListener 'DOMContentLoaded', ->
             renderProfile()
 
       renderUsers = ->
-        processMessages = (users) ->
-          clearTimeout timeout
-          timeout = setTimeout ( ->
-            $('body > .users').html teacup.render ->
-              for key, val of users
-                {profile, tabs} = val
-                continue unless Object.keys(tabs or {}).length
-                div '.user', 'data-user': key, ->
-                  div '.header', ->
-                    img '.image', src: profile.image
-                    span '.name', -> profile.name
-                    time '.time', 'datetime': new Date(profile.last_modified).toISOString(), -> ''
-                  div '.tabs', ->
-                    for highlighted in [true, false]
-                      for key_t, val_t of tabs
-                        continue unless val_t.highlighted is highlighted
-                        div '.tab', 'data-highlighted': val_t.highlighted, ->
-                          val_t.icon or= 'transparent.ico'
-                          img '.image', src: val_t.icon
-                          span '.content', ->
-                            div '.title', -> val_t.title
-                            a '.link', target:'_blank', href:val_t.url, -> val_t.url
-            $('time.time').timeago()
-          ), 1000
+        processMessages = (users, location="users") ->
+          $("body > .#{location}").html teacup.render ->
+            for key, val of users
+              {profile, tabs} = val or {}
+              continue unless profile
+              continue unless Object.keys(tabs or {}).length
+              div '.user', 'data-user': key, ->
+                div '.header', ->
+                  img '.image', src: profile.image
+                  span '.name', -> profile.name
+                  time '.time', 'datetime': new Date(profile.last_modified).toISOString(), -> ''
+                div '.tabs', ->
+                  for highlighted in [true, false]
+                    for key_t, val_t of tabs
+                      continue unless val_t.highlighted is highlighted
+                      div '.tab', 'data-highlighted': val_t.highlighted, ->
+                        val_t.icon or= 'transparent.ico'
+                        img '.image', src: val_t.icon
+                        span '.content', ->
+                          div '.title', -> val_t.title
+                          a '.link', target:'_blank', href:val_t.url, -> val_t.url
+          $('time.time').timeago()
 
-        chrome.runtime.sendMessage {type: 'messages'}, (messages) ->
-          processMessages messages
-        chrome.runtime.onMessage.addListener (messages, sender, sendResponse) ->
-          processMessages messages
+        async.waterfall [
+          (finish) =>
+            chrome.runtime.sendMessage {type: 'messages'}, (messages) ->
+              processMessages messages, 'users'
+              finish()
+
+          (finish) =>
+            chrome.runtime.sendMessage {type: 'friends-messages'}, (messages) ->
+              processMessages messages, 'private-users'
+              finish()
+
+          (finish) =>
+            chrome.runtime.onMessage.addListener ({type, data}, sender, sendResponse) ->
+              processMessages data, type
+        ]
 
       $('body > .nav > span').on 'click', (e) ->
         $el = $ e.currentTarget

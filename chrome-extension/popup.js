@@ -22,18 +22,26 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         div('.nav', function() {
           span('.users', function() {
-            return 'users';
+            return 'public users';
+          });
+          span('.private-users', function() {
+            return 'my friends';
           });
           span('.profile', function() {
             return 'profile';
           });
           return span('.friends', function() {
-            return 'friends';
+            return 'friends add/remove';
           });
         });
         div('.users', function() {
           return div(function() {
             return 'Loading...';
+          });
+        });
+        div('.private-users', function() {
+          return div(function() {
+            return 'loading...';
           });
         });
         div('.profile', function() {
@@ -62,11 +70,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 return "People I want to watch browse";
               });
               div('.friends', function() {
-                var friend, is_mutual, _ref, _results;
-                _ref = friends || {};
+                var friend, name, _results;
                 _results = [];
-                for (friend in _ref) {
-                  is_mutual = _ref[friend];
+                for (friend in friends) {
+                  name = friends[friend];
                   _results.push(div('.friend', {
                     'data-uid': friend
                   }, function() {
@@ -76,14 +83,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     b(function() {
                       return "" + friend + " ";
                     });
-                    span('.remove', function() {
+                    span(function() {
+                      if (name) {
+                        return "(" + name + ")";
+                      }
+                    });
+                    return span('.remove', function() {
                       return 'x';
                     });
-                    if (!is_mutual) {
-                      return div(function() {
-                        return "* they can see you but you can't see them.. ask them to add " + data.uid;
-                      });
-                    }
                   }));
                 }
                 return _results;
@@ -242,88 +249,112 @@ document.addEventListener('DOMContentLoaded', function() {
       };
       renderUsers = function() {
         var processMessages;
-        processMessages = function(users) {
-          clearTimeout(timeout);
-          return timeout = setTimeout((function() {
-            $('body > .users').html(teacup.render(function() {
-              var key, profile, tabs, val, _results;
-              _results = [];
-              for (key in users) {
-                val = users[key];
-                profile = val.profile, tabs = val.tabs;
-                if (!Object.keys(tabs || {}).length) {
-                  continue;
-                }
-                _results.push(div('.user', {
-                  'data-user': key
-                }, function() {
-                  div('.header', function() {
-                    img('.image', {
-                      src: profile.image
-                    });
-                    span('.name', function() {
-                      return profile.name;
-                    });
-                    return time('.time', {
-                      'datetime': new Date(profile.last_modified).toISOString()
-                    }, function() {
-                      return '';
-                    });
-                  });
-                  return div('.tabs', function() {
-                    var highlighted, key_t, val_t, _i, _len, _ref, _results1;
-                    _ref = [true, false];
-                    _results1 = [];
-                    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-                      highlighted = _ref[_i];
-                      _results1.push((function() {
-                        var _results2;
-                        _results2 = [];
-                        for (key_t in tabs) {
-                          val_t = tabs[key_t];
-                          if (val_t.highlighted !== highlighted) {
-                            continue;
-                          }
-                          _results2.push(div('.tab', {
-                            'data-highlighted': val_t.highlighted
-                          }, function() {
-                            val_t.icon || (val_t.icon = 'transparent.ico');
-                            img('.image', {
-                              src: val_t.icon
-                            });
-                            return span('.content', function() {
-                              div('.title', function() {
-                                return val_t.title;
-                              });
-                              return a('.link', {
-                                target: '_blank',
-                                href: val_t.url
-                              }, function() {
-                                return val_t.url;
-                              });
-                            });
-                          }));
-                        }
-                        return _results2;
-                      })());
-                    }
-                    return _results1;
-                  });
-                }));
+        processMessages = function(users, location) {
+          if (location == null) {
+            location = "users";
+          }
+          $("body > ." + location).html(teacup.render(function() {
+            var key, profile, tabs, val, _ref, _results;
+            _results = [];
+            for (key in users) {
+              val = users[key];
+              _ref = val || {}, profile = _ref.profile, tabs = _ref.tabs;
+              if (!profile) {
+                continue;
               }
-              return _results;
-            }));
-            return $('time.time').timeago();
-          }), 1000);
+              if (!Object.keys(tabs || {}).length) {
+                continue;
+              }
+              _results.push(div('.user', {
+                'data-user': key
+              }, function() {
+                div('.header', function() {
+                  img('.image', {
+                    src: profile.image
+                  });
+                  span('.name', function() {
+                    return profile.name;
+                  });
+                  return time('.time', {
+                    'datetime': new Date(profile.last_modified).toISOString()
+                  }, function() {
+                    return '';
+                  });
+                });
+                return div('.tabs', function() {
+                  var highlighted, key_t, val_t, _i, _len, _ref1, _results1;
+                  _ref1 = [true, false];
+                  _results1 = [];
+                  for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+                    highlighted = _ref1[_i];
+                    _results1.push((function() {
+                      var _results2;
+                      _results2 = [];
+                      for (key_t in tabs) {
+                        val_t = tabs[key_t];
+                        if (val_t.highlighted !== highlighted) {
+                          continue;
+                        }
+                        _results2.push(div('.tab', {
+                          'data-highlighted': val_t.highlighted
+                        }, function() {
+                          val_t.icon || (val_t.icon = 'transparent.ico');
+                          img('.image', {
+                            src: val_t.icon
+                          });
+                          return span('.content', function() {
+                            div('.title', function() {
+                              return val_t.title;
+                            });
+                            return a('.link', {
+                              target: '_blank',
+                              href: val_t.url
+                            }, function() {
+                              return val_t.url;
+                            });
+                          });
+                        }));
+                      }
+                      return _results2;
+                    })());
+                  }
+                  return _results1;
+                });
+              }));
+            }
+            return _results;
+          }));
+          return $('time.time').timeago();
         };
-        chrome.runtime.sendMessage({
-          type: 'messages'
-        }, function(messages) {
-          return processMessages(messages);
-        });
-        return chrome.runtime.onMessage.addListener(function(messages, sender, sendResponse) {
-          return processMessages(messages);
-        });
+        return async.waterfall([
+          (function(_this) {
+            return function(finish) {
+              return chrome.runtime.sendMessage({
+                type: 'messages'
+              }, function(messages) {
+                processMessages(messages, 'users');
+                return finish();
+              });
+            };
+          })(this), (function(_this) {
+            return function(finish) {
+              return chrome.runtime.sendMessage({
+                type: 'friends-messages'
+              }, function(messages) {
+                processMessages(messages, 'private-users');
+                return finish();
+              });
+            };
+          })(this), (function(_this) {
+            return function(finish) {
+              return chrome.runtime.onMessage.addListener(function(_arg, sender, sendResponse) {
+                var data, type;
+                type = _arg.type, data = _arg.data;
+                return processMessages(data, type);
+              });
+            };
+          })(this)
+        ]);
       };
       $('body > .nav > span').on('click', function(e) {
         var $el;
