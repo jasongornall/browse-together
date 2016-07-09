@@ -23,6 +23,5 @@ $(document).ready ->
           sendResponse authData
 
       when 'facebook'
-        ref.authWithOAuthPopup 'facebook', ((error, authData) ->
+        ref.authWithOAuthPopup 'facebook', (error, authData) ->
           sendResponse authData
-        )

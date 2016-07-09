@@ -50,39 +50,62 @@ if auth
     if err
       localStorage.removeItem 'auth'
     else
-      tab_location = localStorage.getItem('tab_location') or 'users'
-      ref.child("private_users/#{authData.uid}/profile").once 'value', (doc) ->
+      ref.child("private_users/#{authData.uid}/profile").once 'value', ((doc) ->
         if doc.val()
           tab_location = "private_users"
-          setupTabs authData
         else
           tab_location = "users"
-          ref.child("users/#{authData.uid}/profile").once 'value', (doc) ->
-            setupTabs authData
+        setupTabs authData
+      ), (error) ->
+        tab_location = "users"
+        ref.child("users/#{authData.uid}/profile").once 'value', (doc) ->
+          setupTabs authData
 
 chrome.runtime.onMessageExternal.addListener (request, sender, sendResponse) ->
   localStorage.setItem 'auth', request.token
   ref.authWithCustomToken request.token, (err, authData) ->
-    ref.child("#{tab_location}/#{authData.uid}/profile").once 'value', (og_doc) ->
-      return unless authData
-      user_blob = {}
-      switch request.provider
+    calculateTabLocation = (next) ->
+      debugger;
+      return next() if tab_location isnt "nope"
+      ref.child("private_users/#{authData.uid}/profile").once 'value', ((doc) ->
+        if doc.val()
+          tab_location = 'private_users'
+        else
+          tab_location = 'users'
+        next()
+      ), (error) ->
+        tab_location = "users"
+        next()
+    calculateTabLocation ->
+      ref.child("#{tab_location}/#{authData.uid}/profile").once 'value', (og_doc) ->
+        return unless authData
+        user_blob = {}
+        switch request.provider
 
-        when 'google'
-          user_blob.name = og_doc.child('name').val() or request.github.displayName
-          user_blob.image = og_doc.child('image').val() or request.github.profileImageURL
-          user_blob.last_modified = Date.now()
-          user_blob.private = og_doc.child('private').val() or false
-          user_blob.friends = og_doc.child('friends').val() or {}
+          when 'google'
+            user_blob.name = og_doc.child('name').val() or request.google.displayName
+            user_blob.image = og_doc.child('image').val() or request.google.profileImageURL
+            user_blob.last_modified = Date.now()
+            user_blob.private = og_doc.child('private').val() or false
+            user_blob.friends = og_doc.child('friends').val() or {}
 
-        when 'github'
-          user_blob.name = og_doc.child('name').val() or request.github.displayName
-          user_blob.image = og_doc.child('image').val() or request.github.profileImageURL
-          user_blob.last_modified = Date.now()
-          user_blob.private = og_doc.child('private').val() or false
-          user_blob.friends = og_doc.child('friends').val() or {}
-      ref.child("#{tab_location}/#{authData.uid}/profile").set user_blob, ->
-        setupTabs authData
+          when 'github'
+            user_blob.name = og_doc.child('name').val() or request.github.displayName
+            user_blob.image = og_doc.child('image').val() or request.github.profileImageURL
+            user_blob.last_modified = Date.now()
+            user_blob.private = og_doc.child('private').val() or false
+            user_blob.friends = og_doc.child('friends').val() or {}
+
+          when 'facebook'
+            user_blob.name = og_doc.child('name').val() or request.facebook.displayName
+            user_blob.image = og_doc.child('image').val() or request.facebook.profileImageURL
+            user_blob.last_modified = Date.now()
+            user_blob.private = og_doc.child('private').val() or false
+            user_blob.friends = og_doc.child('friends').val() or {}
+
+        debugger;
+        ref.child("#{tab_location}/#{authData.uid}/profile").set user_blob, ->
+          setupTabs authData
 
 chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
   switch request.type
@@ -120,6 +143,7 @@ chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
       chrome.browserAction.setBadgeText {text: 'off'}
       localStorage.removeItem 'auth'
       ref.unauth()
+      tab_location = 'nope'
       return sendResponse true
 
     when 'save-friends'

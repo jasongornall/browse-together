@@ -85,17 +85,18 @@ if (auth) {
     if (err) {
       return localStorage.removeItem('auth');
     } else {
-      tab_location = localStorage.getItem('tab_location') || 'users';
-      return ref.child("private_users/" + authData.uid + "/profile").once('value', function(doc) {
+      return ref.child("private_users/" + authData.uid + "/profile").once('value', (function(doc) {
         if (doc.val()) {
           tab_location = "private_users";
-          return setupTabs(authData);
         } else {
           tab_location = "users";
-          return ref.child("users/" + authData.uid + "/profile").once('value', function(doc) {
-            return setupTabs(authData);
-          });
         }
+        return setupTabs(authData);
+      }), function(error) {
+        tab_location = "users";
+        return ref.child("users/" + authData.uid + "/profile").once('value', function(doc) {
+          return setupTabs(authData);
+        });
       });
     }
   });
@@ -104,29 +105,57 @@ if (auth) {
 chrome.runtime.onMessageExternal.addListener(function(request, sender, sendResponse) {
   localStorage.setItem('auth', request.token);
   return ref.authWithCustomToken(request.token, function(err, authData) {
-    return ref.child("" + tab_location + "/" + authData.uid + "/profile").once('value', function(og_doc) {
-      var user_blob;
-      if (!authData) {
-        return;
+    var calculateTabLocation;
+    calculateTabLocation = function(next) {
+      debugger;
+      if (tab_location !== "nope") {
+        return next();
       }
-      user_blob = {};
-      switch (request.provider) {
-        case 'google':
-          user_blob.name = og_doc.child('name').val() || request.github.displayName;
-          user_blob.image = og_doc.child('image').val() || request.github.profileImageURL;
-          user_blob.last_modified = Date.now();
-          user_blob["private"] = og_doc.child('private').val() || false;
-          user_blob.friends = og_doc.child('friends').val() || {};
-          break;
-        case 'github':
-          user_blob.name = og_doc.child('name').val() || request.github.displayName;
-          user_blob.image = og_doc.child('image').val() || request.github.profileImageURL;
-          user_blob.last_modified = Date.now();
-          user_blob["private"] = og_doc.child('private').val() || false;
-          user_blob.friends = og_doc.child('friends').val() || {};
-      }
-      return ref.child("" + tab_location + "/" + authData.uid + "/profile").set(user_blob, function() {
-        return setupTabs(authData);
+      return ref.child("private_users/" + authData.uid + "/profile").once('value', (function(doc) {
+        if (doc.val()) {
+          tab_location = 'private_users';
+        } else {
+          tab_location = 'users';
+        }
+        return next();
+      }), function(error) {
+        tab_location = "users";
+        return next();
+      });
+    };
+    return calculateTabLocation(function() {
+      return ref.child("" + tab_location + "/" + authData.uid + "/profile").once('value', function(og_doc) {
+        var user_blob;
+        if (!authData) {
+          return;
+        }
+        user_blob = {};
+        switch (request.provider) {
+          case 'google':
+            user_blob.name = og_doc.child('name').val() || request.google.displayName;
+            user_blob.image = og_doc.child('image').val() || request.google.profileImageURL;
+            user_blob.last_modified = Date.now();
+            user_blob["private"] = og_doc.child('private').val() || false;
+            user_blob.friends = og_doc.child('friends').val() || {};
+            break;
+          case 'github':
+            user_blob.name = og_doc.child('name').val() || request.github.displayName;
+            user_blob.image = og_doc.child('image').val() || request.github.profileImageURL;
+            user_blob.last_modified = Date.now();
+            user_blob["private"] = og_doc.child('private').val() || false;
+            user_blob.friends = og_doc.child('friends').val() || {};
+            break;
+          case 'facebook':
+            user_blob.name = og_doc.child('name').val() || request.facebook.displayName;
+            user_blob.image = og_doc.child('image').val() || request.facebook.profileImageURL;
+            user_blob.last_modified = Date.now();
+            user_blob["private"] = og_doc.child('private').val() || false;
+            user_blob.friends = og_doc.child('friends').val() || {};
+        }
+        debugger;
+        return ref.child("" + tab_location + "/" + authData.uid + "/profile").set(user_blob, function() {
+          return setupTabs(authData);
+        });
       });
     });
   });
@@ -183,6 +212,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       });
       localStorage.removeItem('auth');
       ref.unauth();
+      tab_location = 'nope';
       return sendResponse(true);
     case 'save-friends':
       authData = ref.getAuth();

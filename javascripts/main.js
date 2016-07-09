@@ -25,9 +25,9 @@ $(document).ready(function() {
           return sendResponse(authData);
         });
       case 'facebook':
-        return ref.authWithOAuthPopup('facebook', (function(error, authData) {
+        return ref.authWithOAuthPopup('facebook', function(error, authData) {
           return sendResponse(authData);
-        }));
+        });
     }
   });
 });
