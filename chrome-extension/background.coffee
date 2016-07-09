@@ -129,11 +129,14 @@ chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
 
     when 'get-local-user'
       authData = ref.getAuth()
-      return sendResponse false unless authData
-      ref.child("#{tab_location}/#{authData.uid}/profile").once 'value', (doc) ->
+      return sendResponse false unless authData?.uid
+      ref.child("#{tab_location}/#{authData.uid}/profile").once 'value', ((doc) ->
         val = doc.val()
+        return sendResponse false unless val
         val.uid = authData.uid
         sendResponse val or false
+      ), (error) ->
+        sendResponse false
 
     when 'logout'
       authData = ref.getAuth()

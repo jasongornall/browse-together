@@ -190,14 +190,19 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       break;
     case 'get-local-user':
       authData = ref.getAuth();
-      if (!authData) {
+      if (!(authData != null ? authData.uid : void 0)) {
         return sendResponse(false);
       }
-      ref.child("" + tab_location + "/" + authData.uid + "/profile").once('value', function(doc) {
+      ref.child("" + tab_location + "/" + authData.uid + "/profile").once('value', (function(doc) {
         var val;
         val = doc.val();
+        if (!val) {
+          return sendResponse(false);
+        }
         val.uid = authData.uid;
         return sendResponse(val || false);
+      }), function(error) {
+        return sendResponse(false);
       });
       break;
     case 'logout':
