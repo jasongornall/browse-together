@@ -167,6 +167,7 @@ document.addEventListener 'DOMContentLoaded', ->
 
       $('body > .nav > span').on 'click', (e) ->
         $el = $ e.currentTarget
+        debugger;
         $el.closest('body').attr 'data-state', $el.attr('class')
 
       renderHeader()

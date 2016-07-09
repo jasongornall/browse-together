@@ -359,6 +359,7 @@ document.addEventListener('DOMContentLoaded', function() {
       $('body > .nav > span').on('click', function(e) {
         var $el;
         $el = $(e.currentTarget);
+        debugger;
         return $el.closest('body').attr('data-state', $el.attr('class'));
       });
       renderHeader();

@@ -225,5 +225,4 @@ chrome.tabs.onActivated.addListener ({tabId, windowId}) ->
         user.tabs[tab.id] ?= {}
         user.tabs[tab.id].highlighted = tab.highlighted
         user.profile.last_modifed = Date.now()
-      console.log user.tabs, 'sadasdsa'
       ref.child("#{tab_location}/#{authData.uid}").set user
