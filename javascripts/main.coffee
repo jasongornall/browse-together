@@ -21,3 +21,8 @@ $(document).ready ->
       when 'github'
         ref.authWithOAuthPopup 'github', (error, authData) ->
           sendResponse authData
+
+      when 'facebook'
+        ref.authWithOAuthPopup 'facebook', ((error, authData) ->
+          sendResponse authData
+        )

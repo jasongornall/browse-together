@@ -24,6 +24,10 @@ $(document).ready(function() {
         return ref.authWithOAuthPopup('github', function(error, authData) {
           return sendResponse(authData);
         });
+      case 'facebook':
+        return ref.authWithOAuthPopup('facebook', (function(error, authData) {
+          return sendResponse(authData);
+        }));
     }
   });
 });
