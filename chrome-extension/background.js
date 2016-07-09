@@ -112,15 +112,15 @@ chrome.runtime.onMessageExternal.addListener(function(request, sender, sendRespo
       user_blob = {};
       switch (request.provider) {
         case 'google':
-          user_blob.name = request.google.displayName;
-          user_blob.image = request.google.profileImageURL;
+          user_blob.name = og_doc.child('name').val() || request.github.displayName;
+          user_blob.image = og_doc.child('image').val() || request.github.profileImageURL;
           user_blob.last_modified = Date.now();
           user_blob["private"] = og_doc.child('private').val() || false;
           user_blob.friends = og_doc.child('friends').val() || {};
           break;
         case 'github':
-          user_blob.name = request.github.displayName;
-          user_blob.image = request.github.profileImageURL;
+          user_blob.name = og_doc.child('name').val() || request.github.displayName;
+          user_blob.image = og_doc.child('image').val() || request.github.profileImageURL;
           user_blob.last_modified = Date.now();
           user_blob["private"] = og_doc.child('private').val() || false;
           user_blob.friends = og_doc.child('friends').val() || {};

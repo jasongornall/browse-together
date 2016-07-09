@@ -69,15 +69,15 @@ chrome.runtime.onMessageExternal.addListener (request, sender, sendResponse) ->
       switch request.provider
 
         when 'google'
-          user_blob.name = request.google.displayName
-          user_blob.image = request.google.profileImageURL
+          user_blob.name = og_doc.child('name').val() or request.github.displayName
+          user_blob.image = og_doc.child('image').val() or request.github.profileImageURL
           user_blob.last_modified = Date.now()
           user_blob.private = og_doc.child('private').val() or false
           user_blob.friends = og_doc.child('friends').val() or {}
 
         when 'github'
-          user_blob.name = request.github.displayName
-          user_blob.image = request.github.profileImageURL
+          user_blob.name = og_doc.child('name').val() or request.github.displayName
+          user_blob.image = og_doc.child('image').val() or request.github.profileImageURL
           user_blob.last_modified = Date.now()
           user_blob.private = og_doc.child('private').val() or false
           user_blob.friends = og_doc.child('friends').val() or {}
