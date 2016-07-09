@@ -32,11 +32,9 @@ setupTabs = (authData) ->
 
         for friend in friends
           do (friend) ->
-            console.log 'added on once'
             ref.child("users/#{friend}").on 'value', (doc) ->
               doc_val[friend] = doc.val()
               if Boolean doc_val[friend]
-                console.log 'UPDATED'
                 sendNewMessages {type: 'private-users', data: doc_val}
               else
                 ref.child("private_users/#{friend}").on 'value', (doc) ->
@@ -161,13 +159,10 @@ chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     when 'messages'
       authData = ref.getAuth()
       return sendResponse false unless authData
-      console.log 'call happened'
       ref.child("users").once 'value', (doc_main) ->
-        console.log 'response'
         sendResponse doc_main.val()
 
     when 'friends-messages'
-      console.log 'friends call'
       authData = ref.getAuth()
       return sendResponse false unless authData
       ref.child("#{tab_location}/#{authData.uid}").once 'value', (doc) ->

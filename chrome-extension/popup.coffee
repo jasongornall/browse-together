@@ -127,7 +127,8 @@ document.addEventListener 'DOMContentLoaded', ->
 
       renderUsers = ->
         processMessages = (users, location="users") ->
-          $("body > .#{location}").html teacup.render ->
+          $users = $("body > .#{location}")
+          $users.html teacup.render ->
             for key, val of users
               {profile, tabs} = val or {}
               continue unless profile
@@ -143,11 +144,16 @@ document.addEventListener 'DOMContentLoaded', ->
                       continue unless val_t.highlighted is highlighted
                       div '.tab', 'data-highlighted': val_t.highlighted, ->
                         val_t.icon or= 'transparent.ico'
+                        if data.uid is key
+                          span '.remove', 'data-tab': key_t, -> 'x '
                         img '.image', src: val_t.icon
                         span '.content', ->
                           div '.title', -> val_t.title
                           a '.link', target:'_blank', href:val_t.url, -> val_t.url
-          $('time.time').timeago()
+          $users.find('time.time').timeago()
+          $users.find('.remove').on 'click', (e) ->
+            $el = $ e.currentTarget
+            chrome.tabs.remove $el.data 'tab'
 
         async.waterfall [
           (finish) =>
@@ -167,7 +173,6 @@ document.addEventListener 'DOMContentLoaded', ->
 
       $('body > .nav > span').on 'click', (e) ->
         $el = $ e.currentTarget
-        debugger;
         $el.closest('body').attr 'data-state', $el.attr('class')
 
       renderHeader()

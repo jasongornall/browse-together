@@ -52,11 +52,9 @@ setupTabs = function(authData) {
         for (_j = 0, _len1 = friends.length; _j < _len1; _j++) {
           friend = friends[_j];
           _results.push((function(friend) {
-            console.log('added on once');
             return ref.child("users/" + friend).on('value', function(doc) {
               doc_val[friend] = doc.val();
               if (Boolean(doc_val[friend])) {
-                console.log('UPDATED');
                 return sendNewMessages({
                   type: 'private-users',
                   data: doc_val
@@ -243,14 +241,11 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       if (!authData) {
         return sendResponse(false);
       }
-      console.log('call happened');
       ref.child("users").once('value', function(doc_main) {
-        console.log('response');
         return sendResponse(doc_main.val());
       });
       break;
     case 'friends-messages':
-      console.log('friends call');
       authData = ref.getAuth();
       if (!authData) {
         return sendResponse(false);

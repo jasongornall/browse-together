@@ -123,6 +123,11 @@ html body > .users,
 html body > .private-users {
   padding-top: 10px;
 }
+html body > .users .remove,
+html body > .private-users .remove {
+  color: #f00;
+  cursor: pointer;
+}
 html body > .users > .user > .header,
 html body > .private-users > .user > .header {
   border-radius: 3px;

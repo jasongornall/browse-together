@@ -250,10 +250,12 @@ document.addEventListener('DOMContentLoaded', function() {
       renderUsers = function() {
         var processMessages;
         processMessages = function(users, location) {
+          var $users;
           if (location == null) {
             location = "users";
           }
-          $("body > ." + location).html(teacup.render(function() {
+          $users = $("body > ." + location);
+          $users.html(teacup.render(function() {
             var key, profile, tabs, val, _ref, _results;
             _results = [];
             for (key in users) {
@@ -299,6 +301,13 @@ document.addEventListener('DOMContentLoaded', function() {
                           'data-highlighted': val_t.highlighted
                         }, function() {
                           val_t.icon || (val_t.icon = 'transparent.ico');
+                          if (data.uid === key) {
+                            span('.remove', {
+                              'data-tab': key_t
+                            }, function() {
+                              return 'x ';
+                            });
+                          }
                           img('.image', {
                             src: val_t.icon
                           });
@@ -324,7 +333,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             return _results;
           }));
-          return $('time.time').timeago();
+          $users.find('time.time').timeago();
+          return $users.find('.remove').on('click', function(e) {
+            var $el;
+            $el = $(e.currentTarget);
+            return chrome.tabs.remove($el.data('tab'));
+          });
         };
         return async.waterfall([
           (function(_this) {
@@ -359,7 +373,6 @@ document.addEventListener('DOMContentLoaded', function() {
       $('body > .nav > span').on('click', function(e) {
         var $el;
         $el = $(e.currentTarget);
-        debugger;
         return $el.closest('body').attr('data-state', $el.attr('class'));
       });
       renderHeader();
