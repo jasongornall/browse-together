@@ -20,9 +20,6 @@ setupTabs = function(authData) {
       };
     }
     sendNewMessages = function(messages) {
-      chrome.browserAction.setIcon({
-        path: "icon2.png"
-      });
       chrome.browserAction.setBadgeText({
         text: 'on'
       });
@@ -181,9 +178,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       }
       ref.child("" + tab_location + "/" + authData.uid + "/tabs").remove();
       ref.child("users").off('value');
-      chrome.browserAction.setIcon({
-        path: "icon.png"
-      });
       chrome.browserAction.setBadgeText({
         text: 'off'
       });

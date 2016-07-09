@@ -12,7 +12,6 @@ setupTabs = (authData) ->
         url: tab.url
       }
     sendNewMessages = (messages) ->
-      chrome.browserAction.setIcon {path:"icon2.png"}
       chrome.browserAction.setBadgeText {text: 'on'}
       chrome.runtime.sendMessage messages
 
@@ -118,7 +117,6 @@ chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
       return sendResponse false unless authData
       ref.child("#{tab_location}/#{authData.uid}/tabs").remove()
       ref.child("users").off 'value'
-      chrome.browserAction.setIcon {path:"icon.png"}
       chrome.browserAction.setBadgeText {text: 'off'}
       localStorage.removeItem 'auth'
       ref.unauth()
