@@ -150,6 +150,7 @@ document.addEventListener 'DOMContentLoaded', ->
                   for highlighted in [true, false]
                     for key_t, val_t of tabs
                       continue unless val_t.highlighted is highlighted
+                      continue unless val_t.title
                       div '.tab', 'data-highlighted': val_t.highlighted, ->
                         val_t.icon or= 'transparent.ico'
                         if data.uid is key

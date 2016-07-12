@@ -1,6 +1,6 @@
 {
     "name": "Browse Together",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "description": "A browser action with a popup dump of all bookmarks, including search, add, edit and delete.",
     "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvOJR0sUw4YUn2dHiORw1BHt13brGTWerJwl8a/0r0yhumxnG6BScTCBa4ywgHmpljuGfNWp6O5tXrk6MFeJYTn07KyyRVTKfjH+yD4KySF8ARhjsiyB3upa02nlLjaAwVXnjjDUc6Ngjn3ERjXkJkYHcA0dJnATompFM2KwTajgjhyzEO/Gk/g0bWOF1yrPg0B1ueIYDeS0j/NEqvd/RTsAJjqRXp5sdA/iM6crlAt8GSOJYC9qG1EzYIiO9gMZhYAesMDixZfgTehf1vTzVWOmnIIP5nRiRIC2R4uiTHjOfEOs+POa3jqWDHQI/4oMHhhuzwFX/YGilfpo8zGWsDwIDAQAB",
     "permissions": [

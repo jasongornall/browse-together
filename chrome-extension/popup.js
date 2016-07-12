@@ -310,6 +310,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (val_t.highlighted !== highlighted) {
                           continue;
                         }
+                        if (!val_t.title) {
+                          continue;
+                        }
                         _results2.push(div('.tab', {
                           'data-highlighted': val_t.highlighted
                         }, function() {
